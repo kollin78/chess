@@ -64,6 +64,13 @@ public class ChessPiece {
             for(int i = 1; i < 9; i++) {
                 if((startRow+i < 9) && (startCol+i < 9)) {
                     moveToPos = new ChessPosition(startRow+i, startCol+i);
+                    if ( board.getPiece(moveToPos) != null) {
+                        if(board.getPiece(moveToPos).getTeamColor() != piece.getTeamColor()) {
+                            newMove = new ChessMove(myPosition, moveToPos, null);
+                            validMoves.add(newMove);
+                        }
+                        break;
+                    }
                     newMove = new ChessMove(myPosition, moveToPos, null);
                     validMoves.add(newMove);
                 }
@@ -71,13 +78,27 @@ public class ChessPiece {
             for(int i = 1; i < 9; i++) {
                 if((startRow-i > 0) && (startCol+i < 9)) {
                     moveToPos = new ChessPosition(startRow-i, startCol+i);
+                    if ( board.getPiece(moveToPos) != null) {
+                        if(board.getPiece(moveToPos).getTeamColor() != piece.getTeamColor()) {
+                            newMove = new ChessMove(myPosition, moveToPos, null);
+                            validMoves.add(newMove);
+                        }
+                        break;
+                    }
                     newMove = new ChessMove(myPosition, moveToPos, null);
                     validMoves.add(newMove);
                 }
             }
             for(int i = 1; i < 9; i++) {
                 if((startRow-i > 0) && (startCol-i > 0)) {
-                    moveToPos = new ChessPosition(startRow-i, startCol-i);
+                    moveToPos = new ChessPosition(startRow - i, startCol - i);
+                    if (board.getPiece(moveToPos) != null) {
+                        if(board.getPiece(moveToPos).getTeamColor() != piece.getTeamColor()) {
+                            newMove = new ChessMove(myPosition, moveToPos, null);
+                            validMoves.add(newMove);
+                        }
+                        break;
+                    }
                     newMove = new ChessMove(myPosition, moveToPos, null);
                     validMoves.add(newMove);
                 }
@@ -85,6 +106,13 @@ public class ChessPiece {
             for(int i = 1; i < 9; i++) {
                 if((startRow+i < 9) && (startCol-i > 0)) {
                     moveToPos = new ChessPosition(startRow+i, startCol-i);
+                    if ( board.getPiece(moveToPos) != null) {
+                        if(board.getPiece(moveToPos).getTeamColor() != piece.getTeamColor()) {
+                            newMove = new ChessMove(myPosition, moveToPos, null);
+                            validMoves.add(newMove);
+                        }
+                        break;
+                    }
                     newMove = new ChessMove(myPosition, moveToPos, null);
                     validMoves.add(newMove);
                 }
