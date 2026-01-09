@@ -125,7 +125,7 @@ public class ChessPiece {
             return new ArrayList<>(validMoves);
         } else if (piece.getPieceType() == PieceType.KING) {
 
-           
+
 
             moveToPos = new ChessPosition(startRow + 1, startCol + 1);
             ChessPiece target = board.getPiece(moveToPos);
