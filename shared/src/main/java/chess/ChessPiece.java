@@ -51,6 +51,13 @@ public class ChessPiece {
         return validMoves;
     }
 
+    private ArrayList<ChessMove> canCapture(ChessPiece target, ChessPiece attacker, ChessPosition moveFrom, ChessPosition moveTo, ArrayList<ChessMove> validMovesList) {
+        if (target.getTeamColor() != attacker.getTeamColor()) {
+            validMovesList.add(new ChessMove(moveFrom, moveTo, null));
+        }
+        return validMovesList;
+    }
+
     /**
      * Calculates all the positions a chess piece can move to
      * Does not take into account moves that are illegal due to leaving the king in
@@ -67,6 +74,7 @@ public class ChessPiece {
         int startRow = myPosition.getRow();
         int startCol = myPosition.getColumn();
 
+        /*----------     Bishop     ----------*/
         if(piece.getPieceType() == PieceType.BISHOP) {
 
             for(int i = 1; i < 9; i++) {
@@ -123,7 +131,10 @@ public class ChessPiece {
             }
 
             return new ArrayList<>(validMoves);
-        } else if (piece.getPieceType() == PieceType.KING) {
+
+        }
+        /*----------     KING     ----------*/
+        else if (piece.getPieceType() == PieceType.KING) {
 
             int[][] potentialDirections = {
                     {1,0}, {1,1}, {0,1}, {-1,0}, {-1,-1}, {0,-1}, {-1,1}, {1,-1}
@@ -144,7 +155,10 @@ public class ChessPiece {
                 }
             }
             return new ArrayList<>(validMoves);
-        } else if (piece.getPieceType() == PieceType.KNIGHT) {
+
+        }
+        /*----------     KNIGHT     ----------*/
+        else if (piece.getPieceType() == PieceType.KNIGHT) {
             int [][] potentialDirections = {
                     {2,1}, {1,2}, {-2,1}, {2,-1}, {-2,-1}, {-1,2}, {-1,-2}, {1,-2}
             };
@@ -163,6 +177,217 @@ public class ChessPiece {
                     validMoves.add(newMove);
                 }
             }
+            return new ArrayList<>(validMoves);
+
+        }
+        /*----------     PAWN     ----------*/
+        else if (piece.getPieceType() == PieceType.PAWN) {
+            ArrayList<ChessMove> validMovesList = new ArrayList<>(validMoves);
+            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
+                if(startRow == 2) {
+                    moveToPos = new ChessPosition(startRow+2, startCol);
+                    ChessPiece target = board.getPiece(moveToPos);
+                    if (target != null) {
+                        //Do nothing
+                    }
+                }
+                if(startRow+1 < 9) {
+                    moveToPos = new ChessPosition(startRow+1, startCol);
+                    ChessPiece target = board.getPiece(moveToPos);
+                    if (target != null) {
+                        //Do nothing
+                    } else {
+                        newMove = new ChessMove(myPosition, moveToPos, null);
+                        validMovesList.add(newMove);
+                        if(startRow+1 == 8) {
+                            validMovesList.add(newMove);
+                            validMovesList.add(newMove);
+                            validMovesList.add(newMove);
+                        }
+                    }
+                    if(startCol+1 < 9) {
+                        moveToPos = new ChessPosition(startRow+1, startCol+1);
+                        target = board.getPiece(moveToPos);
+                        if (target != null) {
+                            validMovesList = canCapture(target, piece, myPosition, moveToPos, validMovesList);
+                            newMove = new ChessMove(myPosition, moveToPos, null);
+                            if(startRow+1 == 8) {
+                                validMovesList.add(newMove);
+                                validMovesList.add(newMove);
+                                validMovesList.add(newMove);
+                            }
+                        }
+                    }
+                    if(startCol-1 > 0) {
+                        moveToPos = new ChessPosition(startRow+1, startCol-1);
+                        target = board.getPiece(moveToPos);
+                        if(target != null) {
+                            validMovesList = canCapture(target, piece, myPosition, moveToPos, validMovesList);
+                        }
+                    }
+
+                }
+            } else {
+                if(startRow == 7) {
+                    moveToPos = new ChessPosition(startRow-2, startCol);
+                    ChessPiece target = board.getPiece(moveToPos);
+                    if (target != null) {
+                        //Do nothing
+                    }
+                }
+                if(startRow-1 > 0) {
+                    moveToPos = new ChessPosition(startRow-1, startCol);
+                    ChessPiece target = board.getPiece(moveToPos);
+                    if (target != null) {
+                        // Do nothing
+                    } else {
+                        newMove = new ChessMove(myPosition, moveToPos, null);
+                        validMovesList.add(newMove);
+                        if(startRow-1 == 1) {
+                            validMovesList.add(newMove);
+                            validMovesList.add(newMove);
+                            validMovesList.add(newMove);
+                        }
+                    }
+                    if(startCol+1 < 9) {
+                        moveToPos = new ChessPosition(startRow-1, startCol+1);
+                        target = board.getPiece(moveToPos);
+                        if (target != null) {
+                            validMovesList = canCapture(target, piece, myPosition, moveToPos, validMovesList);
+                            if(startRow-1 == 1) {
+                                newMove = new ChessMove(myPosition, moveToPos, null);
+                                validMovesList.add(newMove);
+                                validMovesList.add(newMove);
+                                validMovesList.add(newMove);
+                            }
+                        }
+                    }
+                    if(startCol-1 > 0) {
+                        moveToPos = new ChessPosition(startRow-1, startCol-1);
+                        target = board.getPiece(moveToPos);
+                        if(target != null) {
+                            validMovesList = canCapture(target, piece, myPosition, moveToPos, validMovesList);
+                            if(startRow-1 == 1) {
+                                newMove = new ChessMove(myPosition, moveToPos, null);
+                                validMovesList.add(newMove);
+                                validMovesList.add(newMove);
+                                validMovesList.add(newMove);
+                            }
+                        }
+                    }
+                }
+            }
+
+
+
+
+            return validMovesList;
+        }
+        /*----------     QUEEN     ----------*/
+        else if (piece.getPieceType() == PieceType.QUEEN) {
+            for(int i = 1; i < 9; i++) {
+                if((startRow+i < 9) && (startCol+i < 9)) {
+                    moveToPos = new ChessPosition(startRow+i, startCol+i);
+                    ChessPiece target = board.getPiece(moveToPos);
+                    if (target != null) {
+                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
+                        break;
+                    } else {
+                        newMove = new ChessMove(myPosition, moveToPos, null);
+                        validMoves.add(newMove);
+                    }
+                }
+            }
+            for(int i = 1; i < 9; i++) {
+                if((startRow-i > 0) && (startCol+i < 9)) {
+                    moveToPos = new ChessPosition(startRow-i, startCol+i);
+                    ChessPiece target = board.getPiece(moveToPos);
+                    if (target != null) {
+                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
+                        break;
+                    } else {
+                        newMove = new ChessMove(myPosition, moveToPos, null);
+                        validMoves.add(newMove);
+                    }
+                }
+            }
+            for(int i = 1; i < 9; i++) {
+                if((startRow-i > 0) && (startCol-i > 0)) {
+                    moveToPos = new ChessPosition(startRow - i, startCol - i);
+                    ChessPiece target = board.getPiece(moveToPos);
+                    if (target != null) {
+                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
+                        break;
+                    } else {
+                        newMove = new ChessMove(myPosition, moveToPos, null);
+                        validMoves.add(newMove);
+                    }
+                }
+            }
+            for(int i = 1; i < 9; i++) {
+                if((startRow+i < 9) && (startCol-i > 0)) {
+                    moveToPos = new ChessPosition(startRow+i, startCol-i);
+                    ChessPiece target = board.getPiece(moveToPos);
+                    if (target != null) {
+                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
+                        break;
+                    } else {
+                        newMove = new ChessMove(myPosition, moveToPos, null);
+                        validMoves.add(newMove);
+                    }
+                }
+            }
+            for(int i = 1; i < 9; i++) {
+                if(startRow+i < 9) {
+                    moveToPos = new ChessPosition(startRow+i, startCol);
+                    ChessPiece target = board.getPiece(moveToPos);
+                    if (target != null) {
+                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
+                        break;
+                    } else {
+                        newMove = new ChessMove(myPosition, moveToPos, null);
+                        validMoves.add(newMove);
+                    }
+                }
+                if (startRow-i > 0) {
+                    moveToPos = new ChessPosition(startRow-i, startCol);
+                    ChessPiece target = board.getPiece(moveToPos);
+                    if (target != null) {
+                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
+                        break;
+                    } else {
+                        newMove = new ChessMove(myPosition, moveToPos, null);
+                        validMoves.add(newMove);
+                    }
+                }
+            }
+            for(int i = 1; i < 9; i++) {
+                if(startCol+i < 9) {
+                    moveToPos = new ChessPosition(startRow, startCol+i);
+                    ChessPiece target = board.getPiece(moveToPos);
+                    if (target != null) {
+                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
+                        break;
+                    } else {
+                        newMove = new ChessMove(myPosition, moveToPos, null);
+                        validMoves.add(newMove);
+                    }
+                }
+                if (startCol-i > 0) {
+                    moveToPos = new ChessPosition(startRow, startCol-i);
+                    ChessPiece target = board.getPiece(moveToPos);
+                    if (target != null) {
+                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
+                        break;
+                    } else {
+                        newMove = new ChessMove(myPosition, moveToPos, null);
+                        validMoves.add(newMove);
+                    }
+                }
+            }
+
+
+
             return new ArrayList<>(validMoves);
         }
 
