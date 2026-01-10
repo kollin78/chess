@@ -125,16 +125,45 @@ public class ChessPiece {
             return new ArrayList<>(validMoves);
         } else if (piece.getPieceType() == PieceType.KING) {
 
-
-
-            moveToPos = new ChessPosition(startRow + 1, startCol + 1);
-            ChessPiece target = board.getPiece(moveToPos);
-            if (target != null) {
-                validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-            } else {
-                newMove = new ChessMove(myPosition, moveToPos, null);
-                validMoves.add(newMove);
+            int[][] potentialDirections = {
+                    {1,0}, {1,1}, {0,1}, {-1,0}, {-1,-1}, {0,-1}, {-1,1}, {1,-1}
+            };
+            for(int[] vectorPair : potentialDirections) {
+                int rowNext = myPosition.getRow() + vectorPair[0];
+                int colNext = myPosition.getColumn() + vectorPair[1];
+                if((rowNext > 8) || (rowNext < 1) || (colNext > 8) || (colNext < 1)) {
+                    continue;
+                }
+                moveToPos = new ChessPosition(rowNext, colNext);
+                ChessPiece target = board.getPiece(moveToPos);
+                if (target != null) {
+                    validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
+                } else {
+                    newMove = new ChessMove(myPosition, moveToPos, null);
+                    validMoves.add(newMove);
+                }
             }
+            return new ArrayList<>(validMoves);
+        } else if (piece.getPieceType() == PieceType.KNIGHT) {
+            int [][] potentialDirections = {
+                    {2,1}, {1,2}, {-2,1}, {2,-1}, {-2,-1}, {-1,2}, {-1,-2}, {1,-2}
+            };
+            for(int[] vectorPair : potentialDirections) {
+                int rowNext = myPosition.getRow() + vectorPair[0];
+                int colNext = myPosition.getColumn() + vectorPair[1];
+                if((rowNext > 8) || (rowNext < 1) || (colNext > 8) || (colNext < 1)) {
+                    continue;
+                }
+                moveToPos = new ChessPosition(rowNext, colNext);
+                ChessPiece target = board.getPiece(moveToPos);
+                if (target != null) {
+                    validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
+                } else {
+                    newMove = new ChessMove(myPosition, moveToPos, null);
+                    validMoves.add(newMove);
+                }
+            }
+            return new ArrayList<>(validMoves);
         }
 
         return List.of();
