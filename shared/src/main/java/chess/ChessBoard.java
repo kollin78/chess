@@ -35,7 +35,6 @@ public class ChessBoard {
     }
 
 
-
     /**
      * Sets the board to the default starting board
      * (How the game of chess normally starts)
