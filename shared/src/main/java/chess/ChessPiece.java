@@ -14,6 +14,7 @@ public class ChessPiece {
     private final ChessGame.TeamColor pieceColor;
     private final PieceType type;
 
+
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.pieceColor = pieceColor;
         this.type = type;
@@ -132,9 +133,7 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessPiece piece = board.getPiece(myPosition);
-        //Set<ChessMove> validMoves = new LinkedHashSet<>();
         ArrayList<ChessMove> validMoves = new ArrayList<>();
-        ChessMove newMove;
         ChessPosition moveToPos;
 
         int startRow = myPosition.getRow();
@@ -164,357 +163,75 @@ public class ChessPiece {
 
             return slidingMoves(board, piece, myPosition, bishopDirs);
 
-//            for(int i = 1; i < 9; i++) {
-//                if((startRow+i < 9) && (startCol+i < 9)) {
-//                    moveToPos = new ChessPosition(startRow+i, startCol+i);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                        break;
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMoves.add(newMove);
-//                    }
-//                }
-//            }
-//            for(int i = 1; i < 9; i++) {
-//                if((startRow-i > 0) && (startCol+i < 9)) {
-//                    moveToPos = new ChessPosition(startRow-i, startCol+i);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                        break;
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMoves.add(newMove);
-//                    }
-//                }
-//            }
-//            for(int i = 1; i < 9; i++) {
-//                if((startRow-i > 0) && (startCol-i > 0)) {
-//                    moveToPos = new ChessPosition(startRow - i, startCol - i);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                        break;
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMoves.add(newMove);
-//                    }
-//                }
-//            }
-//            for(int i = 1; i < 9; i++) {
-//                if((startRow+i < 9) && (startCol-i > 0)) {
-//                    moveToPos = new ChessPosition(startRow+i, startCol-i);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                        break;
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMoves.add(newMove);
-//                    }
-//                }
-//            }
-//
-//            return new ArrayList<>(validMoves);
-
         }
         /*----------     KING     ----------*/
         else if (piece.getPieceType() == PieceType.KING) {
 
             return steppingMoves(board, piece, myPosition, kingDirs);
-//            int[][] potentialDirections = {
-//                    {1,0}, {1,1}, {0,1}, {-1,0}, {-1,-1}, {0,-1}, {-1,1}, {1,-1}
-//            };
-//            for(int[] vectorPair : potentialDirections) {
-//                int rowNext = myPosition.getRow() + vectorPair[0];
-//                int colNext = myPosition.getColumn() + vectorPair[1];
-//                if((rowNext > 8) || (rowNext < 1) || (colNext > 8) || (colNext < 1)) {
-//                    continue;
-//                }
-//                moveToPos = new ChessPosition(rowNext, colNext);
-//                ChessPiece target = board.getPiece(moveToPos);
-//                if (target != null) {
-//                    validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                } else {
-//                    newMove = new ChessMove(myPosition, moveToPos, null);
-//                    validMoves.add(newMove);
-//                }
-//            }
-//            return new ArrayList<>(validMoves);
 
         }
         /*----------     KNIGHT     ----------*/
         else if (piece.getPieceType() == PieceType.KNIGHT) {
 
             return steppingMoves(board, piece, myPosition, knightDirs);
-//            int [][] potentialDirections = {
-//                    {2,1}, {1,2}, {-2,1}, {2,-1}, {-2,-1}, {-1,2}, {-1,-2}, {1,-2}
-//            };
-//            for(int[] vectorPair : potentialDirections) {
-//                int rowNext = myPosition.getRow() + vectorPair[0];
-//                int colNext = myPosition.getColumn() + vectorPair[1];
-//                if((rowNext > 8) || (rowNext < 1) || (colNext > 8) || (colNext < 1)) {
-//                    continue;
-//                }
-//                moveToPos = new ChessPosition(rowNext, colNext);
-//                ChessPiece target = board.getPiece(moveToPos);
-//                if (target != null) {
-//                    validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                } else {
-//                    newMove = new ChessMove(myPosition, moveToPos, null);
-//                    validMoves.add(newMove);
-//                }
-//            }
-//            return new ArrayList<>(validMoves);
 
         }
         /*----------     PAWN     ----------*/
         else if (piece.getPieceType() == PieceType.PAWN) {
-
-            if(startRow == doubleMoveRow) {
-                moveToPos = new ChessPosition(startRow+pawnDir+pawnDir, startCol);
-                if((board.getPiece(moveToPos) == null) && (isOnBoard(moveToPos.getRow(), moveToPos.getColumn()))) {
-                    validMoves.add(new ChessMove(myPosition, moveToPos, null));
-                }
-            } else if (startRow+pawnDir == promotionRow) {
-                for(PieceType type : PieceType.values()) {
-                    moveToPos = new ChessPosition(startRow+pawnDir, startCol);
-                    if(board.getPiece(moveToPos) != null) break;
-                    validMoves.add(new ChessMove(myPosition, moveToPos, type));
-                }
-            } else {
-                moveToPos = new ChessPosition(startRow+pawnDir, startCol);
-                if((board.getPiece(moveToPos) == null) && (isOnBoard(moveToPos.getRow(), moveToPos.getColumn()))) {
-                    validMoves.add(new ChessMove(myPosition, moveToPos, null));
-                }
-                if(isOnBoard(startRow+pawnDir, startCol+pawnDir)) {
-                    moveToPos = new ChessPosition(startRow+pawnDir, startCol+pawnDir);
-                    if(board.getPiece(moveToPos) != null) {
-                        if(canCapture(board, piece, moveToPos)) {
-                            validMoves.add(new ChessMove(myPosition, moveToPos, null));
-                        }
+            // Check if move is on board and if space is open
+            if((isOnBoard(startRow + pawnDir, startCol)) && (board.getPiece(new ChessPosition(startRow + pawnDir, startCol)) == null)) {
+                moveToPos = new ChessPosition(startRow + pawnDir, startCol);
+                if (startRow+pawnDir == promotionRow) { // Pawn should be promoted
+                    for(PieceType type : PieceType.values()) {
+                        if(type == PieceType.PAWN || type == PieceType.KING) continue;
+                        validMoves.add(new ChessMove(myPosition, moveToPos, type));
                     }
-                }
-                if(isOnBoard(startRow+pawnDir, startCol-pawnDir)) {
-                    moveToPos = new ChessPosition(startRow+pawnDir, startCol-pawnDir);
-                    if(board.getPiece(moveToPos) != null) {
-                        if(canCapture(board, piece, moveToPos)) {
+                } else { // Normal moves
+                    validMoves.add(new ChessMove(myPosition, moveToPos, null));
+                    if(startRow == doubleMoveRow) {
+                        moveToPos = new ChessPosition(startRow + pawnDir + pawnDir, startCol);
+                        if(isOnBoard(startRow + pawnDir + pawnDir, startCol) && (board.getPiece(new ChessPosition(startRow + pawnDir + pawnDir, startCol)) == null)) {
                             validMoves.add(new ChessMove(myPosition, moveToPos, null));
                         }
                     }
                 }
             }
-//            ArrayList<ChessMove> validMovesList = new ArrayList<>(validMoves);
-//            if(piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
-//                if(startRow == 2) {
-//                    moveToPos = new ChessPosition(startRow+2, startCol);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        //Do nothing
-//                    }
-//                }
-//                if(startRow+1 < 9) {
-//                    moveToPos = new ChessPosition(startRow+1, startCol);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        //Do nothing
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMovesList.add(newMove);
-//                        if(startRow+1 == 8) {
-//                            validMovesList.add(newMove);
-//                            validMovesList.add(newMove);
-//                            validMovesList.add(newMove);
-//                        }
-//                    }
-//                    if(startCol+1 < 9) {
-//                        moveToPos = new ChessPosition(startRow+1, startCol+1);
-//                        target = board.getPiece(moveToPos);
-//                        if (target != null) {
-//                            validMovesList = canCapture(target, piece, myPosition, moveToPos, validMovesList);
-//                            newMove = new ChessMove(myPosition, moveToPos, null);
-//                            if(startRow+1 == 8) {
-//                                validMovesList.add(newMove);
-//                                validMovesList.add(newMove);
-//                                validMovesList.add(newMove);
-//                            }
-//                        }
-//                    }
-//                    if(startCol-1 > 0) {
-//                        moveToPos = new ChessPosition(startRow+1, startCol-1);
-//                        target = board.getPiece(moveToPos);
-//                        if(target != null) {
-//                            validMovesList = canCapture(target, piece, myPosition, moveToPos, validMovesList);
-//                        }
-//                    }
-//
-//                }
-//            } else {
-//                if(startRow == 7) {
-//                    moveToPos = new ChessPosition(startRow-2, startCol);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        //Do nothing
-//                    }
-//                }
-//                if(startRow-1 > 0) {
-//                    moveToPos = new ChessPosition(startRow-1, startCol);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        // Do nothing
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMovesList.add(newMove);
-//                        if(startRow-1 == 1) {
-//                            validMovesList.add(newMove);
-//                            validMovesList.add(newMove);
-//                            validMovesList.add(newMove);
-//                        }
-//                    }
-//                    if(startCol+1 < 9) {
-//                        moveToPos = new ChessPosition(startRow-1, startCol+1);
-//                        target = board.getPiece(moveToPos);
-//                        if (target != null) {
-//                            validMovesList = canCapture(target, piece, myPosition, moveToPos, validMovesList);
-//                            if(startRow-1 == 1) {
-//                                newMove = new ChessMove(myPosition, moveToPos, null);
-//                                validMovesList.add(newMove);
-//                                validMovesList.add(newMove);
-//                                validMovesList.add(newMove);
-//                            }
-//                        }
-//                    }
-//                    if(startCol-1 > 0) {
-//                        moveToPos = new ChessPosition(startRow-1, startCol-1);
-//                        target = board.getPiece(moveToPos);
-//                        if(target != null) {
-//                            validMovesList = canCapture(target, piece, myPosition, moveToPos, validMovesList);
-//                            if(startRow-1 == 1) {
-//                                newMove = new ChessMove(myPosition, moveToPos, null);
-//                                validMovesList.add(newMove);
-//                                validMovesList.add(newMove);
-//                                validMovesList.add(newMove);
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//
-//
-//
-//
-//            return validMovesList;
+            // Checking sides for capturable pieces
+            if(isOnBoard(startRow + pawnDir, startCol + 1) && (board.getPiece(new ChessPosition(startRow + pawnDir, startCol + 1)) != null)) {
+                moveToPos = new ChessPosition(startRow + pawnDir, startCol + 1);
+                if(canCapture(board, piece, moveToPos)) {
+                    if(startRow + pawnDir == promotionRow) {
+                        for(PieceType type : PieceType.values()) {
+                            if(type == PieceType.PAWN || type == PieceType.KING) continue;
+                            validMoves.add(new ChessMove(myPosition, moveToPos, type));
+                        }
+                    } else {
+                        validMoves.add(new ChessMove(myPosition, moveToPos, null));
+                    }
+                }
+            }
+            if(isOnBoard(startRow + pawnDir, startCol - 1) && (board.getPiece(new ChessPosition(startRow + pawnDir, startCol - 1)) != null)) {
+                moveToPos = new ChessPosition(startRow + pawnDir, startCol - 1);
+                if(canCapture(board, piece, moveToPos)) {
+                    if(startRow + pawnDir == promotionRow) {
+                        for(PieceType type : PieceType.values()) {
+                            if(type == PieceType.PAWN || type == PieceType.KING) continue;
+                            validMoves.add(new ChessMove(myPosition, moveToPos, type));
+                        }
+                    } else {
+                        validMoves.add(new ChessMove(myPosition, moveToPos, null));
+                    }
+                }
+            }
+
+
+            return validMoves;
         }
         /*----------     QUEEN     ----------*/
         else if (piece.getPieceType() == PieceType.QUEEN) {
 
             return slidingMoves(board, piece,myPosition, queenDirs);
-//            for(int i = 1; i < 9; i++) {
-//                if((startRow+i < 9) && (startCol+i < 9)) {
-//                    moveToPos = new ChessPosition(startRow+i, startCol+i);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                        break;
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMoves.add(newMove);
-//                    }
-//                }
-//            }
-//            for(int i = 1; i < 9; i++) {
-//                if((startRow-i > 0) && (startCol+i < 9)) {
-//                    moveToPos = new ChessPosition(startRow-i, startCol+i);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                        break;
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMoves.add(newMove);
-//                    }
-//                }
-//            }
-//            for(int i = 1; i < 9; i++) {
-//                if((startRow-i > 0) && (startCol-i > 0)) {
-//                    moveToPos = new ChessPosition(startRow - i, startCol - i);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                        break;
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMoves.add(newMove);
-//                    }
-//                }
-//            }
-//            for(int i = 1; i < 9; i++) {
-//                if((startRow+i < 9) && (startCol-i > 0)) {
-//                    moveToPos = new ChessPosition(startRow+i, startCol-i);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                        break;
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMoves.add(newMove);
-//                    }
-//                }
-//            }
-//            for(int i = 1; i < 9; i++) {
-//                if(startRow+i < 9) {
-//                    moveToPos = new ChessPosition(startRow+i, startCol);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                        break;
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMoves.add(newMove);
-//                    }
-//                }
-//                if (startRow-i > 0) {
-//                    moveToPos = new ChessPosition(startRow-i, startCol);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                        break;
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMoves.add(newMove);
-//                    }
-//                }
-//            }
-//            for(int i = 1; i < 9; i++) {
-//                if(startCol+i < 9) {
-//                    moveToPos = new ChessPosition(startRow, startCol+i);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                        break;
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMoves.add(newMove);
-//                    }
-//                }
-//                if (startCol-i > 0) {
-//                    moveToPos = new ChessPosition(startRow, startCol-i);
-//                    ChessPiece target = board.getPiece(moveToPos);
-//                    if (target != null) {
-//                        validMoves = canCapture(target, piece, myPosition, moveToPos, validMoves);
-//                        break;
-//                    } else {
-//                        newMove = new ChessMove(myPosition, moveToPos, null);
-//                        validMoves.add(newMove);
-//                    }
-//                }
-//            }
-//
-//
-//
-//            return new ArrayList<>(validMoves);
+
         }
         /*----------     ROOK     ----------*/
         else if (piece.getPieceType() == PieceType.ROOK) {
@@ -524,4 +241,19 @@ public class ChessPiece {
 
         return List.of();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ChessPiece that = (ChessPiece) o;
+        return pieceColor == that.pieceColor && type == that.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pieceColor, type);
+    }
+
 }
