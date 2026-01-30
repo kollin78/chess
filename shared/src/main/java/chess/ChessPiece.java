@@ -45,21 +45,7 @@ public class ChessPiece {
     public PieceType getPieceType() {
         return type;
     }
-
-//    private Set<ChessMove> canCapture(ChessPiece target, ChessPiece attacker, ChessPosition moveFrom, ChessPosition moveTo, Set<ChessMove> validMoves) {
-//        if(target.getTeamColor() != attacker.getTeamColor()) {
-//            validMoves.add(new ChessMove(moveFrom, moveTo, null));
-//        }
-//        return validMoves;
-//    }
-//
-//    private ArrayList<ChessMove> canCapture(ChessPiece target, ChessPiece attacker, ChessPosition moveFrom, ChessPosition moveTo, ArrayList<ChessMove> validMovesList) {
-//        if (target.getTeamColor() != attacker.getTeamColor()) {
-//            validMovesList.add(new ChessMove(moveFrom, moveTo, null));
-//        }
-//        return validMovesList;
-//    }
-
+    
     private boolean isOnBoard(int row, int col) {
         return (row>=1 && row<=8 && col>=1 && col<=8);
     }
@@ -79,8 +65,6 @@ public class ChessPiece {
             while(true) {
                 row+=dir[0];
                 col+=dir[1];
-
-
 
                 if(!isOnBoard(row, col)) {
                     break;
