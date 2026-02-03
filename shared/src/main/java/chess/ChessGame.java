@@ -119,6 +119,7 @@ public class ChessGame {
         board.addPiece(move.getStartPosition(), null);
 
         this.previousMove = move;
+        finalPiece.setMoveState(true);
 
         setTeamTurn(teamTurn == TeamColor.BLACK ? TeamColor.WHITE : TeamColor.BLACK);
     }
