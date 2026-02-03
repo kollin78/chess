@@ -168,14 +168,14 @@ public class ChessGame {
                 ChessPiece piece = board.getPiece(position);
                 if(piece == null) continue;
                 if(piece.getTeamColor() == teamColor) {
-                    if(validMoves(position) != null) {
-                        return true;
+                    if(!validMoves(position).isEmpty()) {
+                        return false;
                     }
                 }
             }
         }
 
-        return false;
+        return true;
     }
 
     /**
@@ -198,14 +198,14 @@ public class ChessGame {
                 ChessPiece piece = board.getPiece(position);
                 if(piece == null) continue;
                 if(piece.getTeamColor() == teamColor) {
-                    if(validMoves(position) == null) {
-                        return true;
+                    if(!validMoves(position).isEmpty()) {
+                        return false;
                     }
                 }
             }
         }
 
-        return false;
+        return true;
     }
 
     /**
