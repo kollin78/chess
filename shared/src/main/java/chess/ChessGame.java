@@ -15,7 +15,8 @@ public class ChessGame {
     private ChessBoard board = new ChessBoard();
 
     public ChessGame() {
-
+        this.teamTurn = TeamColor.WHITE;
+        this.board.resetBoard();
     }
 
     /**
@@ -62,7 +63,7 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        ChessPiece piece = board.getPiece(move.getEndPosition());
+        ChessPiece piece = board.getPiece(move.getStartPosition());
 
         if(piece == null) {
             throw new InvalidMoveException("No such piece");
@@ -75,6 +76,8 @@ public class ChessGame {
             throw new InvalidMoveException("Illegal move");
         }
 
+        board.addPiece(move.getEndPosition(), piece);
+        board.addPiece(move.getStartPosition(), null);
 
 
         setTeamTurn(teamTurn == TeamColor.BLACK ? TeamColor.WHITE : TeamColor.BLACK);
