@@ -1,6 +1,5 @@
 package chess;
 
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -62,6 +61,8 @@ public class ChessGame {
 
         if(piece.getPieceType() == ChessPiece.PieceType.PAWN) {
             enPassant(startPosition, piece, testMoves);
+        } else if (piece.getPieceType() == ChessPiece.PieceType.KING) {
+            castling(startPosition, piece, testMoves);
         }
 
         for(ChessMove move : testMoves) {
@@ -107,6 +108,26 @@ public class ChessGame {
             if(moveDiagonal && isDestEmpty) {
                 ChessPosition capturedPosition = new ChessPosition(move.getStartPosition().getRow(), move.getEndPosition().getColumn());
                 board.addPiece(capturedPosition, null);
+            }
+        }
+
+        if (piece.getPieceType() == ChessPiece.PieceType.KING) {
+            int colDist = move.getEndPosition().getColumn() - move.getStartPosition().getColumn();
+            if (Math.abs(colDist) == 2) {
+                int row = move.getStartPosition().getRow();
+                int rookStartCol = (colDist == 2) ? 8 : 1;
+                int rookEndCol = (colDist == 2) ? 6 : 4;
+
+                ChessPiece rook = board.getPiece(new ChessPosition(row, rookStartCol));
+
+                // Move the Rook to the other side of the King
+                board.addPiece(new ChessPosition(row, rookEndCol), rook);
+                board.addPiece(new ChessPosition(row, rookStartCol), null);
+
+                // MARK THE ROOK AS MOVED
+                if (rook != null) {
+                    rook.setMoveState(true);
+                }
             }
         }
 
@@ -260,6 +281,53 @@ public class ChessGame {
                 validMoves.add(new ChessMove(position, new ChessPosition(moveToRow, previousMove.getEndPosition().getColumn()), null));
             }
         }
+    }
+
+    private void castling(ChessPosition position, ChessPiece king, Collection<ChessMove> validMoves) {
+
+        if(isInCheck(king.getTeamColor())) return;
+
+        int row;
+        if(king.getTeamColor() == TeamColor.WHITE) row = 1;
+        else row = 8;
+
+        if(canCastle(row, 8, new int[]{6, 7}, king.getTeamColor())) {
+            validMoves.add(new ChessMove(position, new ChessPosition(row, 7), null));
+        }
+        if(canCastle(row, 1, new int[]{2, 3, 4}, king.getTeamColor())) {
+            validMoves.add(new ChessMove(position, new ChessPosition(row, 3), null));
+        }
+    }
+
+    private boolean canCastle(int row, int col, int[] pathColumns, TeamColor teamColor) {
+        ChessPiece rook = board.getPiece(new ChessPosition(row, col));
+        ChessPiece king = board.getPiece(new ChessPosition(row, 5));
+
+        if((king == null) || (rook == null) || (king.getMoveState()) || rook.getMoveState()) return false;
+
+        for(int column : pathColumns) {
+            if(board.getPiece(new ChessPosition(row, column)) != null) return false;
+        }
+
+        ChessPosition startingPosKing = new ChessPosition(row, 5);
+        int[] checkSquares;
+        if(col == 8) checkSquares = new int[]{6, 7};
+        else checkSquares = new int[]{4, 3};
+
+        for (int column : checkSquares) {
+            ChessPosition tempPos = new ChessPosition(row, column);
+            board.addPiece(tempPos, king);
+            board.addPiece(startingPosKing, null);
+
+            boolean badMove = isInCheck(teamColor);
+
+            board.addPiece(startingPosKing, king);
+            board.addPiece(tempPos, null);
+
+            if(badMove) return false;
+        }
+
+        return true;
     }
 
     @Override
