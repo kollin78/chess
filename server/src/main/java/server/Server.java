@@ -28,6 +28,9 @@ public class Server {
                 req.result("{\"message\": \"Error: " + e.getMessage() + "\" }");
             }
         });
+        javalin.post("/user", (req) -> {
+            new
+        });
 
     }
 
