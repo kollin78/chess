@@ -7,10 +7,14 @@ import io.javalin.http.Context;
 import io.javalin.http.InternalServerErrorResponse;
 import model.AuthResult;
 import model.ErrorResponse;
+import model.GameData;
 import model.RegisterRequest;
 import org.eclipse.jetty.server.Authentication;
 import service.ClearService;
+import service.GameService;
 import service.UserService;
+
+import java.util.Collection;
 
 public class Server {
 
@@ -22,6 +26,7 @@ public class Server {
 
     private final UserService userService = new UserService(userDAO, authDAO);
     private final ClearService clearService = new ClearService(userDAO, authDAO, gameDAO);
+    private final GameService gameService = new GameService(gameDAO, authDAO);
 
     public Server() {
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
@@ -32,6 +37,8 @@ public class Server {
         javalin.post("/user", this::registerHandler);
         javalin.post("/session", this::loginHandler);
         javalin.delete("/session", this::logoutHandler);
+        javalin.get("/game", this::listGameHandler);
+        javalin.post("/game", this::createGameHandler);
 
     }
 
@@ -107,6 +114,33 @@ public class Server {
             }
 
             context.result(new Gson().toJson(new ErrorResponse(e.getMessage())));
+        }
+    }
+
+    private void listGameHandler(Context context) {
+        try {
+            String authToken = context.header("authorization");
+            Collection<GameData> result = gameService.getGames(authToken);
+            context.status(200);
+            context.result(new Gson().toJson(result));
+        } catch(DataAccessException e) {
+            if(e.getMessage().contains("unauthorized")) {
+                context.status(401);
+            } else {
+                context.status(500);
+            }
+
+            context.result(new Gson().toJson(new ErrorResponse(e.getMessage())));
+        }
+    }
+
+    private void createGamehandler(Context context) {
+        try {
+            String authToken = context.header("authorization");
+            var req = new Gson().fromJson(context.body());
+
+        } catch(DataAccessException e) {
+
         }
     }
 }
