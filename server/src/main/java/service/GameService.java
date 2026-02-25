@@ -40,7 +40,7 @@ public class GameService {
         if(gameData == null) {
             throw new DataAccessException("Error: bad request");
         }
-        if(playerColor == null) {
+        if((playerColor == null) || (playerColor.isEmpty())) {
             throw new DataAccessException("Error: bad request");
         }
 
@@ -49,15 +49,17 @@ public class GameService {
         String currentUser = authDAO.getAuth(authToken).username();
 
         if(playerColor.equalsIgnoreCase("WHITE")) {
-            if(whiteUser != null) {
+            if((whiteUser != null) && (!whiteUser.isEmpty())) {
                 throw new DataAccessException("Error: already taken");
             }
             whiteUser = currentUser;
         } else if(playerColor.equalsIgnoreCase("BLACK")) {
-            if(blackUser != null) {
+            if((blackUser != null) && (!blackUser.isEmpty())) {
                 throw new DataAccessException("Error: already taken");
             }
             blackUser = currentUser;
+        } else {
+            throw new DataAccessException("Error: bad request");
         }
 
         gameDAO.updateGame(new GameData(gameID, whiteUser, blackUser, gameData.gameName(), gameData.game()));

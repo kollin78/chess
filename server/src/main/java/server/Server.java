@@ -5,10 +5,7 @@ import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
 import io.javalin.http.InternalServerErrorResponse;
-import model.AuthResult;
-import model.ErrorResponse;
-import model.GameData;
-import model.RegisterRequest;
+import model.*;
 import org.eclipse.jetty.server.Authentication;
 import service.ClearService;
 import service.GameService;
@@ -37,9 +34,9 @@ public class Server {
         javalin.post("/user", this::registerHandler);
         javalin.post("/session", this::loginHandler);
         javalin.delete("/session", this::logoutHandler);
-        javalin.get("/game", this::listGameHandler);
+        javalin.get("/game", this::listGamesHandler);
         javalin.post("/game", this::createGameHandler);
-
+        javalin.put("/game", this::joinGameHandler);
     }
 
     public int run(int desiredPort) {
@@ -57,8 +54,7 @@ public class Server {
             context.status(200);
             context.result("{}");
         } catch (DataAccessException e) {
-            context.status(500);
-            context.json(new ErrorResponse(e.getMessage()));
+            handleError(e, context);
         }
     }
 
@@ -69,15 +65,7 @@ public class Server {
             context.status(200);
             context.result(new Gson().toJson(result));
         } catch(DataAccessException e) {
-            if(e.getMessage().contains("bad request")) {
-                context.status(400);
-            } else if (e.getMessage().contains("username already taken")) {
-                context.status(403);
-            } else {
-                context.status(500);
-            }
-
-            context.result(new Gson().toJson(new ErrorResponse(e.getMessage())));
+            handleError(e, context);
         }
     }
 
@@ -88,15 +76,7 @@ public class Server {
             context.status(200);
             context.result(new Gson().toJson(result));
         } catch(DataAccessException e) {
-            if(e.getMessage().contains("bad request")) {
-                context.status(400);
-            } else if(e.getMessage().contains("unauthorized")) {
-                context.status(401);
-            } else {
-                context.status(500);
-            }
-
-            context.result(new Gson().toJson(new ErrorResponse(e.getMessage())));
+            handleError(e, context);
         }
     }
 
@@ -107,40 +87,56 @@ public class Server {
             context.status(200);
             context.result("{}");
         } catch(DataAccessException e) {
-            if(e.getMessage().contains("unauthorized")) {
-                context.status(401);
-            } else {
-                context.status(500);
-            }
-
-            context.result(new Gson().toJson(new ErrorResponse(e.getMessage())));
+            handleError(e, context);
         }
     }
 
-    private void listGameHandler(Context context) {
+    private void listGamesHandler(Context context) {
         try {
             String authToken = context.header("authorization");
             Collection<GameData> result = gameService.getGames(authToken);
             context.status(200);
-            context.result(new Gson().toJson(result));
+            context.result(new Gson().toJson(new ListGamesResult(result)));
         } catch(DataAccessException e) {
-            if(e.getMessage().contains("unauthorized")) {
-                context.status(401);
-            } else {
-                context.status(500);
-            }
-
-            context.result(new Gson().toJson(new ErrorResponse(e.getMessage())));
+            handleError(e, context);
         }
     }
 
-    private void createGamehandler(Context context) {
+    private void createGameHandler(Context context) {
         try {
             String authToken = context.header("authorization");
-            var req = new Gson().fromJson(context.body());
-
+            var req = new Gson().fromJson(context.body(), CreateGameRequest.class);
+            int gameID = gameService.createGame(req.gameName(), authToken);
+            context.status(200);
+            context.result(new Gson().toJson(new CreateGameResult(gameID)));
         } catch(DataAccessException e) {
-
+            handleError(e, context);
         }
+    }
+
+    private void joinGameHandler(Context context) {
+        try {
+            String authToken = context.header("authorization");
+            var req = new Gson().fromJson(context.body(), JoinGameRequest.class);
+            gameService.joinGame(authToken, req.playerColor(), req.gameID());
+            context.status(200);
+            context.result("{}");
+        } catch(DataAccessException e) {
+            handleError(e, context);
+        }
+    }
+
+    private void handleError(DataAccessException e, Context context) {
+        String message = e.getMessage();
+        if (message.contains("bad request")) {
+            context.status(400);
+        } else if (message.contains("unauthorized")) {
+            context.status(401);
+        } else if (message.contains("already taken")) {
+            context.status(403);
+        } else {
+            context.status(500);
+        }
+        context.result(new Gson().toJson(new ErrorResponse(message)));
     }
 }
