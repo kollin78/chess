@@ -4,6 +4,7 @@ import dataaccess.*;
 import model.AuthResult;
 import model.LoginRequest;
 import model.RegisterRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +15,7 @@ public class UserServiceTest {
     private AuthDAO authDAO;
     private UserService userService;
 
+    @BeforeEach
     public void setup() {
         userDAO = new UserDAOMemory();
         authDAO = new AuthDAOMemory();
