@@ -2,6 +2,7 @@ package service;
 
 import dataaccess.*;
 import model.AuthResult;
+import model.LoginRequest;
 import model.RegisterRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,5 +39,43 @@ public class UserServiceTest {
         });
 
         assertTrue(e.getMessage().contains("bad request"));
+    }
+
+    @Test
+    @DisplayName("successful login")
+    public void loginSuccess() throws DataAccessException {
+        LoginRequest request = new LoginRequest("test_username", "supersecretpassword");
+        AuthResult result = userService.login(request);
+
+        assertNotNull(result.authToken());
+        assertEquals("test_username", result.username());
+    }
+
+    @Test
+    @DisplayName("fail to login")
+    public void loginFail() throws DataAccessException {
+        userService.registerUser(new RegisterRequest("test_username", "supersecretpassword", "email@byu.net"));
+        LoginRequest request = new LoginRequest("test_username", null);
+        DataAccessException e = assertThrows(DataAccessException.class, () -> {
+            userService.login(request);
+        });
+
+        assertTrue(e.getMessage().contains("bad request"));
+    }
+
+    @Test
+    @DisplayName("successful logout")
+    public void logoutSuccess() throws DataAccessException {
+        AuthResult auth = userService.registerUser(new RegisterRequest("test_username", "supersecretpassword", "email@byu.net"));
+        assertDoesNotThrow(() -> userService.logout(auth.authToken()));
+        assertNull(authDAO.getAuth(auth.authToken()));
+    }
+
+    @Test
+    @DisplayName("fail to logout")
+    public void logoutFail() throws DataAccessException {
+        assertThrows(DataAccessException.class, () -> {
+            userService.logout("unauthorized");
+        });
     }
 }
