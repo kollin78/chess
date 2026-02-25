@@ -29,7 +29,7 @@ public class Server {
             }
         });
         javalin.post("/user", (req) -> {
-            new
+
         });
 
     }
