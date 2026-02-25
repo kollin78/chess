@@ -31,6 +31,7 @@ public class Server {
         javalin.delete("/db", this::clearHandler);
         javalin.post("/user", this::registerHandler);
         javalin.post("/session", this::loginHandler);
+        javalin.delete("/session", this::logoutHandler);
 
     }
 
@@ -59,7 +60,7 @@ public class Server {
             var req = new Gson().fromJson(context.body(), RegisterRequest.class);
             AuthResult result = userService.registerUser(req);
             context.status(200);
-            context.json(result);
+            context.result(new Gson().toJson(result));
         } catch(DataAccessException e) {
             if(e.getMessage().contains("bad request")) {
                 context.status(400);
@@ -68,11 +69,44 @@ public class Server {
             } else {
                 context.status(500);
             }
-            context.json(new ErrorResponse(e.getMessage()));
+
+            context.result(new Gson().toJson(new ErrorResponse(e.getMessage())));
         }
     }
 
     private void loginHandler(Context context) {
+        try {
+            var req = new Gson().fromJson(context.body(), model.LoginRequest.class);
+            AuthResult result = userService.login(req);
+            context.status(200);
+            context.result(new Gson().toJson(result));
+        } catch(DataAccessException e) {
+            if(e.getMessage().contains("bad request")) {
+                context.status(400);
+            } else if(e.getMessage().contains("unauthorized")) {
+                context.status(401);
+            } else {
+                context.status(500);
+            }
 
+            context.result(new Gson().toJson(new ErrorResponse(e.getMessage())));
+        }
+    }
+
+    private void logoutHandler(Context context) {
+        try{
+            String authToken = context.header("authorization");
+            userService.logout(authToken);
+            context.status(200);
+            context.result("{}");
+        } catch(DataAccessException e) {
+            if(e.getMessage().contains("unauthorized")) {
+                context.status(401);
+            } else {
+                context.status(500);
+            }
+
+            context.result(new Gson().toJson(new ErrorResponse(e.getMessage())));
+        }
     }
 }
