@@ -14,7 +14,7 @@ public class GameDAOMemory implements GameDAO{
 
     @Override
     public int createGame(String gameName) throws DataAccessException {
-        GameData data = new GameData(gameID, "", "", gameName, new ChessGame());
+        GameData data = new GameData(gameID, null, null, gameName, new ChessGame());
         games.put(gameID, data);
         gameID++;
         return gameID - 1; // returns gameID for this game, -1 bc you updated gameID before leaving function

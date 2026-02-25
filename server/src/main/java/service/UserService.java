@@ -37,6 +37,9 @@ public class UserService {
 
     public AuthResult login(LoginRequest req) throws DataAccessException {
         model.UserData user = userDAO.getUser(req.username());
+        if((req.username() == null) || (req.username().isEmpty()) || (req.password() == null)) {
+            throw new DataAccessException("Error: bad request");
+            }
         if((user == null) || (!user.password().equals(req.password()))) {
             throw new DataAccessException("Error: unauthorized");
         }
