@@ -199,22 +199,7 @@ public class ChessGame {
             return false;
         }
 
-        ChessPosition position;
-
-        for(int i = 1; i < 9; i++) {
-            for(int j = 1; j < 9; j++) {
-                position = new ChessPosition(i, j);
-                ChessPiece piece = board.getPiece(position);
-                if(piece == null) continue;
-                if(piece.getTeamColor() == teamColor) {
-                    if(!validMoves(position).isEmpty()) {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        return true;
+        return existsValidMove(teamColor);
     }
 
     /**
@@ -229,8 +214,11 @@ public class ChessGame {
             return false;
         }
 
-        ChessPosition position;
+        return existsValidMove(teamColor);
+    }
 
+    private boolean existsValidMove(TeamColor teamColor) {
+        ChessPosition position;
         for(int i = 1; i < 9; i++) {
             for(int j = 1; j < 9; j++) {
                 position = new ChessPosition(i, j);

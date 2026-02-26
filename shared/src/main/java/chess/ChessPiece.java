@@ -192,29 +192,11 @@ public class ChessPiece {
             // Checking sides for capturable pieces
             if(isOnBoard(startRow + pawnDir, startCol + 1) && (board.getPiece(new ChessPosition(startRow + pawnDir, startCol + 1)) != null)) {
                 moveToPos = new ChessPosition(startRow + pawnDir, startCol + 1);
-                if(canCapture(board, piece, moveToPos)) {
-                    if(startRow + pawnDir == promotionRow) {
-                        for(PieceType type : PieceType.values()) {
-                            if(type == PieceType.PAWN || type == PieceType.KING) continue;
-                            validMoves.add(new ChessMove(myPosition, moveToPos, type));
-                        }
-                    } else {
-                        validMoves.add(new ChessMove(myPosition, moveToPos, null));
-                    }
-                }
+                findValidMoves(board, myPosition, piece, validMoves, moveToPos, startRow, pawnDir, promotionRow);
             }
             if(isOnBoard(startRow + pawnDir, startCol - 1) && (board.getPiece(new ChessPosition(startRow + pawnDir, startCol - 1)) != null)) {
                 moveToPos = new ChessPosition(startRow + pawnDir, startCol - 1);
-                if(canCapture(board, piece, moveToPos)) {
-                    if(startRow + pawnDir == promotionRow) {
-                        for(PieceType type : PieceType.values()) {
-                            if(type == PieceType.PAWN || type == PieceType.KING) continue;
-                            validMoves.add(new ChessMove(myPosition, moveToPos, type));
-                        }
-                    } else {
-                        validMoves.add(new ChessMove(myPosition, moveToPos, null));
-                    }
-                }
+                findValidMoves(board, myPosition, piece, validMoves, moveToPos, startRow, pawnDir, promotionRow);
             }
 
 
@@ -233,6 +215,19 @@ public class ChessPiece {
         }
 
         return List.of();
+    }
+
+    private void findValidMoves(ChessBoard board, ChessPosition myPosition, ChessPiece piece, ArrayList<ChessMove> validMoves, ChessPosition moveToPos, int startRow, int pawnDir, int promotionRow) {
+        if(canCapture(board, piece, moveToPos)) {
+            if(startRow + pawnDir == promotionRow) {
+                for(PieceType type : PieceType.values()) {
+                    if(type == PieceType.PAWN || type == PieceType.KING) continue;
+                    validMoves.add(new ChessMove(myPosition, moveToPos, type));
+                }
+            } else {
+                validMoves.add(new ChessMove(myPosition, moveToPos, null));
+            }
+        }
     }
 
     @Override
