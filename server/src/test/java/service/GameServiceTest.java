@@ -81,6 +81,6 @@ public class GameServiceTest {
             gameService.joinGame(null, "WHITE", gameID);
         });
 
-        assertTrue(e.getMessage().contains("bad request"));
+        assertTrue(e.getMessage().contains("unauthorized"));
     }
 }

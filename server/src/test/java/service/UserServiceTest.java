@@ -46,6 +46,7 @@ public class UserServiceTest {
     @Test
     @DisplayName("successful login")
     public void loginSuccess() throws DataAccessException {
+        userService.registerUser(new RegisterRequest("test_username", "supersecretpassword", "email@byu.net"));
         LoginRequest request = new LoginRequest("test_username", "supersecretpassword");
         AuthResult result = userService.login(request);
 
