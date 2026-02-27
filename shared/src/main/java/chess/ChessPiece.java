@@ -16,7 +16,7 @@ public class ChessPiece {
     private boolean hasMoved = false;
 
 
-    public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
+    public ChessPiece(ChessGame.TeamColor pieceColor, PieceType type) {
         this.pieceColor = pieceColor;
         this.type = type;
     }
@@ -117,6 +117,79 @@ public class ChessPiece {
         return validMoves;
     }
 
+    private ArrayList<ChessMove> pawnMoves(ChessBoard board, ChessPiece piece, ChessPosition moveFrom) {
+        ArrayList<ChessMove> validMoves = new ArrayList<>();
+
+        int startRow = moveFrom.getRow();
+        int startCol = moveFrom.getColumn();
+
+        int pawnDir;
+        int promotionRow;
+        int doubleMoveRow;
+        if(piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
+            pawnDir = 1;
+            promotionRow = 8;
+            doubleMoveRow = 2;
+        } else {
+            pawnDir = -1;
+            promotionRow = 1;
+            doubleMoveRow = 7;
+        }
+
+        int[][] dirArray = {{pawnDir, 1}, {pawnDir, -1}};
+
+        int rowPlus = startRow + pawnDir;
+
+        // first square forward
+        if(isOnBoard(rowPlus, startCol)) {
+            ChessPosition moveTo = new ChessPosition(rowPlus, startCol);
+
+            if(board.getPiece(moveTo) == null) {
+                handlePawnMoves(validMoves, moveFrom, moveTo, promotionRow);
+
+                // if pawn's first move (i.e. can double move)
+                if(startRow == doubleMoveRow) {
+                    int rowPlusPlus = rowPlus + pawnDir;
+                    moveTo = new ChessPosition(rowPlusPlus, startCol);
+                    if(isOnBoard(rowPlusPlus, startCol)) {
+                       if(board.getPiece(moveTo) == null) {
+                           validMoves.add(new ChessMove(moveFrom, moveTo, null));
+                       }
+                    }
+                }
+            }
+        }
+
+        for(int[] dir : dirArray) {
+            int row = startRow + dir[0];
+            int col = startCol + dir[1];
+
+            if(!isOnBoard(row, col)) {
+                continue;
+            } else {
+                ChessPosition moveTo = new ChessPosition(row, col);
+                if ((board.getPiece(moveTo) == null) || (canCapture(board, piece, moveTo))) {
+                    handlePawnMoves(validMoves, moveFrom, moveTo, promotionRow);
+                }
+            }
+        }
+
+        return validMoves;
+    }
+
+    private void handlePawnMoves(ArrayList<ChessMove> validMoves, ChessPosition moveFrom, ChessPosition moveTo, int promotionRow) {
+        if(moveTo.getRow() == promotionRow) {
+            for(PieceType pieceType : PieceType.values()) {
+                if((pieceType == PieceType.PAWN) || (pieceType == PieceType.KING)) {
+                    continue;
+                }
+                validMoves.add(new ChessMove(moveFrom, moveTo, pieceType));
+            }
+        } else {
+            validMoves.add(new ChessMove(moveFrom, moveTo, null));
+        }
+    }
+
     /**
      * Calculates all the positions a chess piece can move to
      * Does not take into account moves that are illegal due to leaving the king in
@@ -138,75 +211,31 @@ public class ChessPiece {
         int[][] kingDirs = {{1,0}, {1,1}, {0,1}, {-1,0}, {-1,-1}, {0,-1}, {-1,1}, {1,-1}};
         int[][] knightDirs = {{2,1}, {-2,1}, {2,-1}, {-2,-1}, {1,2}, {-1,2}, {1,-2}, {-1,-2}};
 
-        int pawnDir;
-        int promotionRow;
-        int doubleMoveRow;
-        if(piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
-            pawnDir = 1;
-            promotionRow = 8;
-            doubleMoveRow = 2;
-        } else {
-            pawnDir = -1;
-            promotionRow = 1;
-            doubleMoveRow = 7;
-        }
 
         /*----------     Bishop     ----------*/
         if(piece.getPieceType() == PieceType.BISHOP) {
 
             return slidingMoves(board, piece, myPosition, bishopDirs);
-
         }
         /*----------     KING     ----------*/
         else if (piece.getPieceType() == PieceType.KING) {
 
             return steppingMoves(board, piece, myPosition, kingDirs);
-
         }
         /*----------     KNIGHT     ----------*/
         else if (piece.getPieceType() == PieceType.KNIGHT) {
 
             return steppingMoves(board, piece, myPosition, knightDirs);
-
         }
         /*----------     PAWN     ----------*/
         else if (piece.getPieceType() == PieceType.PAWN) {
-            // Check if move is on board and if space is open
-            if((isOnBoard(startRow + pawnDir, startCol)) && (board.getPiece(new ChessPosition(startRow + pawnDir, startCol)) == null)) {
-                moveToPos = new ChessPosition(startRow + pawnDir, startCol);
-                if (startRow+pawnDir == promotionRow) { // Pawn should be promoted
-                    for(PieceType type : PieceType.values()) {
-                        if(type == PieceType.PAWN || type == PieceType.KING) continue;
-                        validMoves.add(new ChessMove(myPosition, moveToPos, type));
-                    }
-                } else { // Normal moves
-                    validMoves.add(new ChessMove(myPosition, moveToPos, null));
-                    if(startRow == doubleMoveRow) {
-                        moveToPos = new ChessPosition(startRow + pawnDir + pawnDir, startCol);
-                        if(isOnBoard(startRow + pawnDir + pawnDir, startCol) && (board.getPiece(new ChessPosition(startRow + pawnDir + pawnDir, startCol)) == null)) {
-                            validMoves.add(new ChessMove(myPosition, moveToPos, null));
-                        }
-                    }
-                }
-            }
-            // Checking sides for capturable pieces
-            if(isOnBoard(startRow + pawnDir, startCol + 1) && (board.getPiece(new ChessPosition(startRow + pawnDir, startCol + 1)) != null)) {
-                moveToPos = new ChessPosition(startRow + pawnDir, startCol + 1);
-                findValidMoves(board, myPosition, piece, validMoves, moveToPos, startRow, pawnDir, promotionRow);
-            }
-            if(isOnBoard(startRow + pawnDir, startCol - 1) && (board.getPiece(new ChessPosition(startRow + pawnDir, startCol - 1)) != null)) {
-                moveToPos = new ChessPosition(startRow + pawnDir, startCol - 1);
-                findValidMoves(board, myPosition, piece, validMoves, moveToPos, startRow, pawnDir, promotionRow);
-            }
 
-
-            return validMoves;
+            return pawnMoves(board, piece, myPosition);
         }
         /*----------     QUEEN     ----------*/
         else if (piece.getPieceType() == PieceType.QUEEN) {
 
             return slidingMoves(board, piece,myPosition, queenDirs);
-
         }
         /*----------     ROOK     ----------*/
         else if (piece.getPieceType() == PieceType.ROOK) {
@@ -215,19 +244,6 @@ public class ChessPiece {
         }
 
         return List.of();
-    }
-
-    private void findValidMoves(ChessBoard board, ChessPosition myPosition, ChessPiece piece, ArrayList<ChessMove> validMoves, ChessPosition moveToPos, int startRow, int pawnDir, int promotionRow) {
-        if(canCapture(board, piece, moveToPos)) {
-            if(startRow + pawnDir == promotionRow) {
-                for(PieceType type : PieceType.values()) {
-                    if(type == PieceType.PAWN || type == PieceType.KING) continue;
-                    validMoves.add(new ChessMove(myPosition, moveToPos, type));
-                }
-            } else {
-                validMoves.add(new ChessMove(myPosition, moveToPos, null));
-            }
-        }
     }
 
     @Override
