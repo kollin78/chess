@@ -19,7 +19,12 @@ public class UserService {
     }
 
     public AuthResult registerUser(RegisterRequest req) throws DataAccessException {
-        if((req.username() == null) || (req.username().isEmpty() || (req.password() == null) || (req.password().isEmpty()) || (req.email() == null) || (req.email().isEmpty()))) {
+        if((req.username() == null)
+                || (req.username().isEmpty()
+                || (req.password() == null)
+                || (req.password().isEmpty())
+                || (req.email() == null)
+                || (req.email().isEmpty()))) {
             throw new DataAccessException("Error: bad request");
         }
 

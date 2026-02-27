@@ -264,7 +264,9 @@ public class ChessGame {
 
     private void enPassant(ChessPosition position, ChessPiece piece, Collection<ChessMove> validMoves) {
 
-        if(previousMove == null) return;
+        if(previousMove == null) {
+            return;
+        }
 
         ChessPiece previousPiece = board.getPiece(previousMove.getEndPosition());
         if((previousPiece == null) || (previousPiece.getPieceType() != ChessPiece.PieceType.PAWN)) {
@@ -298,7 +300,9 @@ public class ChessGame {
         if(king.getTeamColor() == TeamColor.WHITE) {
             row = 1;
         }
-        else row = 8;
+        else {
+            row = 8;
+        }
 
         if(canCastle(row, 8, new int[]{6, 7}, king.getTeamColor())) {
             validMoves.add(new ChessMove(position, new ChessPosition(row, 7), null));
