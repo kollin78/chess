@@ -168,7 +168,7 @@ public class ChessPiece {
                 continue;
             } else {
                 ChessPosition moveTo = new ChessPosition(row, col);
-                if ((board.getPiece(moveTo) == null) || (canCapture(board, piece, moveTo))) {
+                if ((board.getPiece(moveTo) != null) && (canCapture(board, piece, moveTo))) {
                     handlePawnMoves(validMoves, moveFrom, moveTo, promotionRow);
                 }
             }
