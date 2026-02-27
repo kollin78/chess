@@ -141,20 +141,21 @@ public class ChessPiece {
         int rowPlus = startRow + pawnDir;
 
         // first square forward
-        if(isOnBoard(rowPlus, startCol)) {
-            ChessPosition moveTo = new ChessPosition(rowPlus, startCol);
+        if(!isOnBoard(rowPlus, startCol)) {
+            return validMoves;
+        }
+        ChessPosition moveTo = new ChessPosition(rowPlus, startCol);
 
-            if(board.getPiece(moveTo) == null) {
-                handlePawnMoves(validMoves, moveFrom, moveTo, promotionRow);
+        if(board.getPiece(moveTo) == null) {
+            handlePawnMoves(validMoves, moveFrom, moveTo, promotionRow);
 
-                // if pawn's first move (i.e. can double move)
-                if(startRow == doubleMoveRow) {
-                    int rowPlusPlus = rowPlus + pawnDir;
-                    moveTo = new ChessPosition(rowPlusPlus, startCol);
-                    if(isOnBoard(rowPlusPlus, startCol)) {
-                       if(board.getPiece(moveTo) == null) {
-                           validMoves.add(new ChessMove(moveFrom, moveTo, null));
-                       }
+            // if pawn's first move (i.e. can double move)
+            if(startRow == doubleMoveRow) {
+                int rowPlusPlus = rowPlus + pawnDir;
+                moveTo = new ChessPosition(rowPlusPlus, startCol);
+                if(isOnBoard(rowPlusPlus, startCol)) {
+                    if(board.getPiece(moveTo) == null) {
+                        validMoves.add(new ChessMove(moveFrom, moveTo, null));
                     }
                 }
             }

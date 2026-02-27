@@ -175,11 +175,12 @@ public class ChessGame {
                 attackerPos = new ChessPosition(i, j);
                 ChessPiece attacker = board.getPiece(attackerPos);
                 if(attacker == null) continue;
-                if(attacker.getTeamColor() != teamColor) {
-                    for(ChessMove move : attacker.pieceMoves(board, attackerPos)) {
-                        if(move.getEndPosition().equals(kingPos)) {
-                            return true;
-                        }
+                if(attacker.getTeamColor() == teamColor) {
+                    continue;
+                }
+                for(ChessMove move : attacker.pieceMoves(board, attackerPos)) {
+                    if(move.getEndPosition().equals(kingPos)) {
+                        return true;
                     }
                 }
             }
