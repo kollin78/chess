@@ -1,18 +1,18 @@
 package dataaccess;
 
+import chess.ChessGame;
 import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
 import org.mindrot.jbcrypt.BCrypt;
 
-import javax.xml.crypto.Data;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.sql.Types.NULL;
@@ -33,12 +33,12 @@ public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT authToken, username FROM auths WHERE authToken=?";
+            String statement = "SELECT authToken, username FROM auths WHERE authToken=?";
             try (PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
                 preparedStatement.setString(1, authToken);
-                try (ResultSet rs = preparedStatement.executeQuery()) {
-                    if (rs.next()) {
-                        return new AuthData(rs.getString("authToken"), rs.getString("username"));
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return new AuthData(resultSet.getString("authToken"), resultSet.getString("username"));
                     }
                 }
             }
@@ -50,28 +50,77 @@ public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-        var statement = "DELETE FROM auths WHERE authToken=?";
+        String statement = "DELETE FROM auths WHERE authToken=?";
         executeUpdate(statement, authToken);
     }
 
     @Override
     public int createGame(String gameName) throws DataAccessException {
-        return 0;
+        String gameJson = new Gson().toJson(new chess.ChessGame());
+        String statement = "INSERT INTO games (gameName, json) VALUES (?, ?)";
+
+        return executeUpdate(statement, gameName, gameJson);
     }
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String statement = "SELECT gameID, whiteUsername, blackUsername, gameName, json FROM games WHERE gameID=?";
+            try (PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
+                preparedStatement.setInt(1, gameID);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String json = resultSet.getString("json");
+                        ChessGame chessGame = new Gson().fromJson(json, chess.ChessGame.class);
+
+                        return new GameData(
+                                resultSet.getInt("gameID"),
+                                resultSet.getString("whiteUsername"),
+                                resultSet.getString("blackUsername"),
+                                resultSet.getString("gameName"),
+                                chessGame
+                        );
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(e.getMessage());
+        }
         return null;
     }
 
     @Override
     public Collection<GameData> listGames() throws DataAccessException {
-        return List.of();
+        ArrayList<GameData> games = new ArrayList<>();
+        try (Connection conn = DatabaseManager.getConnection()) {
+            String statement = "SELECT gameID, whiteUsername, blackUsername, gameName, json FROM games";
+            try (PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        String json = resultSet.getString("json");
+                        ChessGame chessGame = new Gson().fromJson(json, chess.ChessGame.class);
+
+                        games.add(new GameData(
+                                resultSet.getInt("gameID"),
+                                resultSet.getString("whiteUsername"),
+                                resultSet.getString("blackUsername"),
+                                resultSet.getString("gameName"),
+                                chessGame
+                        ));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(e.getMessage());
+        }
+        return games;
     }
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
-
+        String statement = "UPDATE games SET whiteUsername=?, blackUsername=?, gameName=?, json=? WHERE gameID=?";
+        String gameJson = new Gson().toJson(game.game());
+        executeUpdate(statement, game.whiteUsername(), game.blackUsername(), game.gameName(), gameJson, game.gameID());
     }
 
     @Override
@@ -87,9 +136,9 @@ public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
             var statement = "SELECT username, password, email FROM users WHERE username=?";
             try (PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
                 preparedStatement.setString(1, username);
-                try (ResultSet rs = preparedStatement.executeQuery()) {
-                    if (rs.next()) {
-                        return new UserData(rs.getString("username"), rs.getString("password"), rs.getString("email"));
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return new UserData(resultSet.getString("username"), resultSet.getString("password"), resultSet.getString("email"));
                     }
                 }
             }
@@ -136,22 +185,22 @@ public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
 
     private int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
-            try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement preparedStatement = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
                 for (int i = 0; i < params.length; i++) {
                     Object param = params[i];
                     switch (param) {
-                        case String p -> ps.setString(i + 1, p);
-                        case Integer p -> ps.setInt(i + 1, p);
-                        case null -> ps.setNull(i + 1, NULL);
+                        case String p -> preparedStatement.setString(i + 1, p);
+                        case Integer p -> preparedStatement.setInt(i + 1, p);
+                        case null -> preparedStatement.setNull(i + 1, NULL);
                         default -> {
                         }
                     }
                 }
-                ps.executeUpdate();
+                preparedStatement.executeUpdate();
 
-                ResultSet rs = ps.getGeneratedKeys();
-                if (rs.next()) {
-                    return rs.getInt(1);
+                ResultSet resultSet = preparedStatement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
                 }
 
                 return 0;

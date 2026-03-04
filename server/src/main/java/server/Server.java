@@ -16,17 +16,29 @@ import java.util.Collection;
 public class Server {
 
     private final Javalin javalin;
+    private final UserDAO userDAO;
+    private final AuthDAO authDAO;
+    private final GameDAO gameDAO;
 
-    private final UserDAO userDAO = new UserDAOMemory();
-    private final AuthDAO authDAO = new AuthDAOMemory();
-    private final GameDAO gameDAO = new GameDAOMemory();
+    private final UserService userService;
+    private final GameService gameService;
 
-    private final UserService userService = new UserService(userDAO, authDAO);
-    private final ClearService clearService = new ClearService(userDAO, authDAO, gameDAO);
-    private final GameService gameService = new GameService(gameDAO, authDAO);
-
-    public Server() {
+    public Server(){
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
+
+        try {
+            MySqlDataAccess dataAccess = new MySqlDataAccess();
+
+            this.userDAO = dataAccess;
+            this.authDAO = dataAccess;
+            this.gameDAO = dataAccess;
+
+            this.userService = new UserService(userDAO, authDAO);
+            this.gameService = new GameService(gameDAO, authDAO);
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Error: " + e.getMessage());
+        }
+
 
         // Register your endpoints and exception handlers here.
 

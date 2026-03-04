@@ -6,6 +6,7 @@ import dataaccess.UserDAO;
 import model.LoginRequest;
 import model.RegisterRequest;
 import model.AuthResult;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.UUID;
 
@@ -45,7 +46,7 @@ public class UserService {
         if((req.username() == null) || (req.username().isEmpty()) || (req.password() == null)) {
             throw new DataAccessException("Error: bad request");
             }
-        if((user == null) || (!user.password().equals(req.password()))) {
+        if((user == null) || (!BCrypt.checkpw(req.password(), user.password()))) {
             throw new DataAccessException("Error: unauthorized");
         }
 
