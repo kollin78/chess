@@ -1,5 +1,6 @@
 package dataaccess;
 
+import java.io.InputStream;
 import java.sql.*;
 import java.util.Properties;
 
@@ -13,7 +14,21 @@ public class DatabaseManager {
      * Load the database information for the db.properties file.
      */
     static {
-        loadPropertiesFromResources();
+        try {
+            try (InputStream in = DatabaseManager.class.getClassLoader().getResourceAsStream("db.properties")) {
+                Properties props = new Properties();
+                props.load(in);
+                databaseName = props.getProperty("db.name");
+                dbUsername = props.getProperty("db.user");
+                dbPassword = props.getProperty("db.password");
+
+                String host = props.getProperty("db.host");
+                var port = Integer.parseInt(props.getProperty("db.port"));
+                connectionUrl = String.format("jdbc:mysql://%s:%d", host, port);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("unable to process db.properties. " + ex.getMessage());
+        }
     }
 
     /**
@@ -48,6 +63,7 @@ public class DatabaseManager {
             conn.setCatalog(databaseName);
             return conn;
         } catch (SQLException ex) {
+            System.out.println("CRITICAL SQL ERROR: " + ex.getMessage());
             throw new DataAccessException("failed to get connection", ex);
         }
     }

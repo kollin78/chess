@@ -16,6 +16,12 @@ import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.sql.Types.NULL;
 
 public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
+
+    public MySqlDataAccess() throws DataAccessException {
+        DatabaseManager.createDatabase();
+        configureDatabase();
+    }
+
     @Override
     public void createAuth(AuthData authData) throws DataAccessException {
 
