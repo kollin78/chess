@@ -147,8 +147,13 @@ public class Server {
         } else if (message.contains("already taken")) {
             context.status(403);
         } else {
+            if (!message.toLowerCase().contains("error")) {
+                message = "Error: " + message;
+            }
             context.status(500);
         }
+
+
         context.result(new Gson().toJson(new ErrorResponse(message)));
     }
 }
