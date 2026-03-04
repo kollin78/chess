@@ -3,6 +3,7 @@ package dataaccess;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -57,6 +58,19 @@ public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()) {
+            var statement = "SELECT username, password, email FROM users WHERE username=?";
+            try (var preparedStatement = conn.prepareStatement(statement)) {
+                preparedStatement.setString(1, username);
+                try (var rs = preparedStatement.executeQuery()) {
+                    if (rs.next()) {
+                        return new UserData(rs.getString("username"), rs.getString("password"), rs.getString("email"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(e.getMessage());
+        }
         return null;
     }
 
@@ -131,5 +145,32 @@ public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
         } catch (SQLException ex) {
             throw new DataAccessException(String.format("Unable to configure database: %s", ex.getMessage()));
         }
+    }
+
+    private void storeUserPassword(String username, String clearTextPassword, String email) throws DataAccessException {
+        String hashedPassword = BCrypt.hashpw(clearTextPassword, BCrypt.gensalt());
+        writeHashedPasswordToDatabase(username, hashedPassword, email);
+    }
+
+    private void writeHashedPasswordToDatabase(String username, String hashedPassword, String email) throws DataAccessException {
+        String sql = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
+        executeUpdate(sql, username, hashedPassword, email);
+    }
+
+    private boolean verifyUser(String username, String providedClearTextPassword) throws DataAccessException {
+        var hashedPassword = readHashedPasswordFromDatabase(username);
+        if (hashedPassword == null) {
+            return false;
+        }
+        return BCrypt.checkpw(providedClearTextPassword, hashedPassword);
+    }
+
+    private String readHashedPasswordFromDatabase(String username) throws DataAccessException {
+        UserData user = getUser(username);
+        if(user != null) {
+            return user.password();
+        }
+
+        return null;
     }
 }
