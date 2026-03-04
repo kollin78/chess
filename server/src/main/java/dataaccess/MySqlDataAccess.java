@@ -1,5 +1,6 @@
 package dataaccess;
 
+import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
@@ -59,16 +60,18 @@ public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
 
     @Override
     public void createUser(UserData user) throws DataAccessException {
-
+        String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
+        var statement = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
+        executeUpdate(statement, user.username(), hashedPassword, user.email());
     }
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        try (var conn = DatabaseManager.getConnection()) {
+        try (Connection conn = DatabaseManager.getConnection()) {
             var statement = "SELECT username, password, email FROM users WHERE username=?";
-            try (var preparedStatement = conn.prepareStatement(statement)) {
+            try (PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
                 preparedStatement.setString(1, username);
-                try (var rs = preparedStatement.executeQuery()) {
+                try (ResultSet rs = preparedStatement.executeQuery()) {
                     if (rs.next()) {
                         return new UserData(rs.getString("username"), rs.getString("password"), rs.getString("email"));
                     }
@@ -82,7 +85,9 @@ public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
 
     @Override
     public void clear() throws DataAccessException {
-
+        executeUpdate("TRUNCATE TABLE users");
+        executeUpdate("TRUNCATE TABLE auths");
+        executeUpdate("TRUNCATE TABLE games");
     }
 
     private final String[] createStatements = {
@@ -153,30 +158,17 @@ public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
         }
     }
 
-    private void storeUserPassword(String username, String clearTextPassword, String email) throws DataAccessException {
-        String hashedPassword = BCrypt.hashpw(clearTextPassword, BCrypt.gensalt());
-        writeHashedPasswordToDatabase(username, hashedPassword, email);
-    }
-
-    private void writeHashedPasswordToDatabase(String username, String hashedPassword, String email) throws DataAccessException {
-        String sql = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
-        executeUpdate(sql, username, hashedPassword, email);
-    }
 
     private boolean verifyUser(String username, String providedClearTextPassword) throws DataAccessException {
-        var hashedPassword = readHashedPasswordFromDatabase(username);
+        UserData user = getUser(username);
+        if(user == null) {
+            return false;
+        }
+        String hashedPassword = user.password();
         if (hashedPassword == null) {
             return false;
         }
         return BCrypt.checkpw(providedClearTextPassword, hashedPassword);
     }
 
-    private String readHashedPasswordFromDatabase(String username) throws DataAccessException {
-        UserData user = getUser(username);
-        if(user != null) {
-            return user.password();
-        }
-
-        return null;
-    }
 }
