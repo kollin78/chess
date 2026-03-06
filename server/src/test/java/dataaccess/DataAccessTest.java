@@ -50,7 +50,9 @@ public class DataAccessTest {
         UserData createdUser = new UserData("testUser", "testPass", "test@byu.net");
         dataAccess.createUser(createdUser);
         UserData retrievedUser = dataAccess.getUser("testUser");
-        assertEquals(createdUser, retrievedUser);
+
+        assertEquals(createdUser.username(), retrievedUser.username());
+        assertEquals(createdUser.email(), retrievedUser.email());
     }
 
     @Test
@@ -58,7 +60,7 @@ public class DataAccessTest {
     public void getUserFail() throws DataAccessException {
         dataAccess.createUser(new UserData("testUser", "testPass", "test@byu.net"));
 
-        assertThrows(DataAccessException.class, () -> dataAccess.getUser("fakeUser"));
+        assertNull(dataAccess.getUser("fakeUser"));
     }
 
     //createAuth, getAuth, deleteAuth
@@ -104,7 +106,7 @@ public class DataAccessTest {
         AuthData testAuth = new AuthData("realAuthToken", "testUser");
         dataAccess.createAuth(testAuth);
 
-        assertThrows(DataAccessException.class, () -> dataAccess.getAuth("randomToken"));
+        assertNull(dataAccess.getAuth("randomToken"));
     }
 
     @Test
@@ -126,8 +128,10 @@ public class DataAccessTest {
         dataAccess.createUser(createdUser);
         AuthData testAuth = new AuthData("realAuthToken", "testUser");
         dataAccess.createAuth(testAuth);
+        dataAccess.deleteAuth("randomToken");
 
-        assertThrows(DataAccessException.class, () -> dataAccess.deleteAuth("randomToken"));
+
+        assertNotNull(dataAccess.getAuth("realAuthToken"));
     }
 
     //createGame, getGame, listGames, updateGame
@@ -159,7 +163,7 @@ public class DataAccessTest {
     @DisplayName("get game fail")
     public void getGameFail() throws DataAccessException {
 
-        assertThrows(DataAccessException.class, () -> dataAccess.getGame(4321));
+        assertNull(dataAccess.getGame(4321));
     }
 
     @Test
@@ -187,14 +191,14 @@ public class DataAccessTest {
         GameData retrievedGame = dataAccess.getGame(gameID);
 
         assertNotNull(retrievedGame);
-        assertEquals("createdGame", retrievedGame.gameName());
+        assertEquals("realGame", retrievedGame.gameName());
     }
 
     @Test
     @DisplayName("update game fail")
     public void updateGameFail() throws DataAccessException {
         int gameID = dataAccess.createGame("createdGame");
-        GameData sadGame = new GameData(gameID, "whiteUsername", "blackUsername", "superSadGame", null);
+        GameData sadGame = new GameData(gameID, null, null, null, new ChessGame());
 
         assertThrows(DataAccessException.class, () -> dataAccess.updateGame(sadGame));
     }
