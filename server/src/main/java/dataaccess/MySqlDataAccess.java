@@ -224,16 +224,5 @@ public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
     }
 
 
-    private boolean verifyUser(String username, String providedClearTextPassword) throws DataAccessException {
-        UserData user = getUser(username);
-        if(user == null) {
-            return false;
-        }
-        String hashedPassword = user.password();
-        if (hashedPassword == null) {
-            return false;
-        }
-        return BCrypt.checkpw(providedClearTextPassword, hashedPassword);
-    }
 
 }
