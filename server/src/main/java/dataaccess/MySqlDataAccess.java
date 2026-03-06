@@ -184,8 +184,8 @@ public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
     };
 
     private int executeUpdate(String statement, Object... params) throws DataAccessException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            try (PreparedStatement preparedStatement = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
                 for (int i = 0; i < params.length; i++) {
                     Object param = params[i];
                     switch (param) {
@@ -204,7 +204,7 @@ public class MySqlDataAccess implements UserDAO, AuthDAO, GameDAO{
                 }
 
                 return 0;
-            }
+
         } catch (SQLException e) {
             throw new DataAccessException(String.format("unable to update database: %s, %s", statement, e.getMessage()));
         }
