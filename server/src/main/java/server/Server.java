@@ -39,7 +39,6 @@ public class Server {
             throw new RuntimeException("Error: " + e.getMessage());
         }
 
-
         // Register your endpoints and exception handlers here.
 
         javalin.delete("/db", this::clearHandler);
@@ -152,7 +151,6 @@ public class Server {
             }
             context.status(500);
         }
-
 
         context.result(new Gson().toJson(new ErrorResponse(message)));
     }
