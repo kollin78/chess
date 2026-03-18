@@ -137,4 +137,17 @@ public class ServerFacadeTests {
            serverFacade.joinGame(new JoinGameRequest("WHITE", 4321), "probablyInvalidAuthToken");
         });
     }
+
+    @Test
+    void clearDbSuccess() throws ResponseException {
+        var authData = serverFacade.register(new UserData("testPlayer", "realPassword", "test@byu.net"));
+
+        assertDoesNotThrow(() -> {
+            serverFacade.clearDB();
+        });
+
+        assertDoesNotThrow(() -> {
+            serverFacade.register(new UserData("testPlayer", "realPassword", "test@byu.net"));
+        });
+    }
 }
