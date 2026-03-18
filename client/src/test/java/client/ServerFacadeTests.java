@@ -1,6 +1,8 @@
 package client;
 
 import exception.ResponseException;
+import model.CreateGameRequest;
+import model.JoinGameRequest;
 import model.LoginRequest;
 import model.UserData;
 import org.junit.jupiter.api.*;
@@ -81,10 +83,58 @@ public class ServerFacadeTests {
 
     @Test
     void logoutFail() throws ResponseException {
-        var authData = serverFacade.register(new UserData("testPlayer", "realPassword", "test@byu.net"));
-
         assertThrows(ResponseException.class, () -> {
            serverFacade.logout("theRealSlimShady");
+        });
+    }
+
+    @Test
+    void createGameSuccess() throws ResponseException {
+        var authData = serverFacade.register(new UserData("testPlayer", "realPassword", "test@byu.net"));
+
+        assertDoesNotThrow(() -> {
+            serverFacade.createGame(new CreateGameRequest("realGameForSure"), authData.authToken());
+        });
+    }
+
+    @Test
+    void createGameFail() throws ResponseException {
+        assertThrows(ResponseException.class, () -> {
+           serverFacade.createGame(new CreateGameRequest("realGameForSure"), "superRealAuthToken-NotReally");
+        });
+    }
+
+    @Test
+    void listGamesSuccess() throws ResponseException {
+        var authData = serverFacade.register(new UserData("testPlayer", "realPassword", "test@byu.net"));
+        var game1 = serverFacade.createGame(new CreateGameRequest("realGame1"), authData.authToken());
+        var game2 = serverFacade.createGame(new CreateGameRequest("realGame2"), authData.authToken());
+        var listGameResult = serverFacade.listGames(authData.authToken());
+
+        assertEquals(2, listGameResult.games().size());
+    }
+
+    @Test
+    void listGamesFail() throws ResponseException {
+        assertThrows(ResponseException.class, () -> {
+            serverFacade.listGames("fakeAuthToken");
+        });
+    }
+
+    @Test
+    void joinGameSuccess() throws ResponseException {
+        var authData = serverFacade.register(new UserData("testPlayer", "realPassword", "test@byu.net"));
+        var game1 = serverFacade.createGame(new CreateGameRequest("realGame1"), authData.authToken());
+
+        assertDoesNotThrow(() -> {
+           serverFacade.joinGame(new JoinGameRequest("WHITE", game1), authData.authToken());
+        });
+    }
+
+    @Test
+    void joinGameFail() throws ResponseException {
+        assertThrows(ResponseException.class, () -> {
+           serverFacade.joinGame(new JoinGameRequest("WHITE", 4321), "probablyInvalidAuthToken");
         });
     }
 }
