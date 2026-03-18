@@ -2,8 +2,7 @@ package client;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import model.AuthData;
-import model.UserData;
+import model.*;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -27,7 +26,43 @@ public class ServerFacade {
     public AuthData register(UserData user) throws ResponseException {
         var request = buildRequest("POST", "/user", user, null);
         var response = sendRequest(request);
+
         return handleResponse(response, AuthData.class);
+    }
+
+    public AuthData login(LoginRequest request) throws ResponseException {
+        var req = buildRequest("POST", "/session", request, null);
+        var response = sendRequest(req);
+
+        return handleResponse(response, AuthData.class);
+    }
+
+    public void logout(String authToken) throws ResponseException {
+        var request = buildRequest("DELETE", "/session", null, authToken);
+        var response = sendRequest(request);
+
+        handleResponse(response, null);
+    }
+
+    public ListGamesResult listGames(String authToken) throws ResponseException {
+        var request = buildRequest("GET", "/game", null, authToken);
+        var response = sendRequest(request);
+
+        return handleResponse(response, ListGamesResult.class);
+    }
+
+    public int createGame(CreateGameRequest gameRequest, String authToken) throws ResponseException {
+        var request = buildRequest("POST", "/game", gameRequest, authToken);
+        var response = sendRequest(request);
+
+        return handleResponse(response, CreateGameResult.class).gameID();
+    }
+
+    public void joinGame(JoinGameRequest joinGameRequest, String authToken) throws ResponseException {
+        var request = buildRequest("PUT", "/game", joinGameRequest, authToken);
+        var response = sendRequest(request);
+
+        handleResponse(response, null);
     }
 
     private HttpRequest buildRequest(String method, String path, Object body, String authToken) {
