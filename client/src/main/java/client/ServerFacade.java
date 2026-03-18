@@ -74,7 +74,6 @@ public class ServerFacade {
         }
 
         return null;
-        }
     }
 
     private boolean isSuccessful(int status) {
