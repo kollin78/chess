@@ -56,7 +56,7 @@ public class ChessClient {
                 case "login" -> login(params);
                 case "logout" -> logout();
                 case "create" -> createGame(params);
-                case "list" -> joinGame(params);
+                case "list" -> listGames();
                 case "join" -> joinGame(params);
                 case "spectate" -> spectateGame(params);
                 case "quit" -> "quit";
@@ -138,6 +138,32 @@ public class ChessClient {
         }
 
         throw new ResponseException(400, "Expected: <GAME_NAME>, got sadness instead");
+    }
+
+    private String listGames() throws ResponseException {
+        verifyLoggedIn();
+        var gamesObject = serverFacade.listGames(authData.authToken()).games();
+        gameList = new ArrayList<>(gamesObject);
+        var gameString = new StringBuilder();
+        for(int i = 0; i < gameList.size(); i++) {
+            var game = gameList.get(i);
+            gameString.append(String.format("%d. %s (W: %s, B: %s)\n",
+                    i+1,
+                    game.gameName(),
+                    game.whiteUsername(),
+                    game.blackUsername()));
+        }
+
+        return gameString.toString();
+    }
+
+    private String joinGame(String... params) throws ResponseException {
+        verifyLoggedIn();
+        if(params.length >= 2) {
+            try {
+
+            }
+        }
     }
 
     private void verifyLoggedIn() throws ResponseException {
