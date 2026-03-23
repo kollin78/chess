@@ -28,7 +28,7 @@ public class ChessClient {
     public void run() {
         var result = "";
 
-        System.out.println("Welkomen to my chess server. Pls sign in to start");
+        System.out.println("Welkomen to my chess server. Pls register or sign in to start");
         System.out.print(help());
         Scanner scanner = new Scanner(System.in);
 
@@ -48,7 +48,12 @@ public class ChessClient {
     public String eval(String line) {
         try {
             String[] tokens = line.toLowerCase().split(" ");
-            String cmd = (tokens.length > 0) ? tokens[0] : "help";
+            String cmd;
+            if(tokens.length > 0) {
+                cmd = tokens[0];
+            } else {
+                cmd = "help";
+            }
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch(cmd) {
                 case "register" -> register(params);
