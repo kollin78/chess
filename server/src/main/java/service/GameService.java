@@ -40,8 +40,8 @@ public class GameService {
         if(gameData == null) {
             throw new DataAccessException("Error: bad request");
         }
-        if((playerColor == null) || (playerColor.isEmpty())) {
-            throw new DataAccessException("Error: bad request");
+        if(playerColor == null) {
+            return;
         }
 
         String whiteUser = gameData.whiteUsername();
