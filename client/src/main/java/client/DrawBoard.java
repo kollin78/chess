@@ -10,7 +10,10 @@ import static ui.EscapeSequences.*;
 public class DrawBoard {
     private static final int BOARD_SQUARES = 8;
     private static final String TRIPLE_SPACE = "   ";
+    private static final String DOUBLE_SPACE = "  ";
     private static final String SINGLE_SPACE = " ";
+    private static final String EM_SPACE = "\u2003";
+    private static final String PUNC_SPACE = "\u2008";
 
     public static String draw(boolean isPlayerWhite) {
         var stringBuilder = new StringBuilder();
@@ -36,25 +39,25 @@ public class DrawBoard {
     private static void drawColumns(StringBuilder stringBuilder, boolean isPlayerWhite) {
         stringBuilder.append(SET_BG_COLOR_DARK_GREY).append(SET_TEXT_COLOR_BLUE).append(TRIPLE_SPACE);
         String[] columnHeaders =
-                {" a ", " b ", " c ",
-                " d ", " e ", " f ",
-                " g ", "  h "};
+                {"a", "b", "c",
+                "d", "e", "f",
+                "g", "h"};
 
         if(isPlayerWhite) {
             for(int i = 0; i < 8; i++) {
-                stringBuilder.append(columnHeaders[i]);
+                stringBuilder.append(EM_SPACE).append(columnHeaders[i]).append(SINGLE_SPACE);
             }
         } else {
             for(int i = 7; i >= 0; i--) {
-                stringBuilder.append(columnHeaders[i]);
+                stringBuilder.append(EM_SPACE).append(columnHeaders[i]).append(SINGLE_SPACE);
             }
         }
 
-        stringBuilder.append(SINGLE_SPACE).append(RESET_TEXT_COLOR).append(RESET_BG_COLOR).append("\n");
+        stringBuilder.append(TRIPLE_SPACE).append(PUNC_SPACE).append(PUNC_SPACE).append(RESET_TEXT_COLOR).append(RESET_BG_COLOR).append("\n");
     }
 
     private static void drawRows(StringBuilder stringBuilder, int row, ChessBoard board, boolean isPlayerWhite) {
-        stringBuilder.append(SET_BG_COLOR_DARK_GREY).append(SET_TEXT_COLOR_MAGENTA).append(SINGLE_SPACE).append(row).append(SINGLE_SPACE);
+        stringBuilder.append(SET_BG_COLOR_DARK_GREY).append(SET_TEXT_COLOR_MAGENTA).append(SINGLE_SPACE).append(row).append(EM_SPACE);
 
         for(int column = 1; column <= 8; column++) {
             int printedCol;
@@ -83,7 +86,7 @@ public class DrawBoard {
 
     private static String getPieceString(ChessPiece piece) {
         if(piece == null) {
-            return " \u2003 ";
+            return SINGLE_SPACE + EM_SPACE + SINGLE_SPACE;
         }
 
         String color;
