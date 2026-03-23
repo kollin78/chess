@@ -9,7 +9,6 @@ import model.*;
 import exception.ResponseException;
 
 import static client.State.*;
-import static com.sun.org.apache.xpath.internal.XPathAPI.eval;
 import static ui.EscapeSequences.*;
 
 
@@ -175,6 +174,23 @@ public class ChessClient {
             }
         }
         throw new ResponseException(400, "Expected: <gameID>, didn't get it :(");
+    }
+
+    private String spectateGame(String... params) throws ResponseException {
+        verifyLoggedIn();
+        if(params.length >= 1) {
+            try {
+                int listNumber = Integer.parseInt(params[0]);
+                int gameID = gameList.get(listNumber - 1).gameID();
+
+                serverFacade.joinGame(new JoinGameRequest(null, gameID), authData.authToken());
+
+                return DrawBoard.draw(true);
+            } catch (IndexOutOfBoundsException e) {
+                throw new ResponseException(400, "Game number doesn't exist, please pick a valid game number from listGames");
+            }
+        }
+        throw new ResponseException(400, "Expected: <gameID>, got something that was not <gameID>");
     }
 
 
