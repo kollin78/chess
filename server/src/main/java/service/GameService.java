@@ -58,7 +58,9 @@ public class GameService {
                 throw new DataAccessException("Error: already taken");
             }
             blackUser = currentUser;
-        } else {
+        } else if((currentUser.equals(whiteUser)) || (currentUser.equals(blackUser))) {
+            throw new DataAccessException("Error: already in game");
+        }else {
             throw new DataAccessException("Error: bad request");
         }
 
