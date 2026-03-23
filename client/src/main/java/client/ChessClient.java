@@ -161,10 +161,22 @@ public class ChessClient {
         verifyLoggedIn();
         if(params.length >= 2) {
             try {
+                int listNumber = Integer.parseInt(params[0]);
+                String playerColor = params[1].toUpperCase();
+                int gameID = gameList.get(listNumber - 1).gameID();
 
+                serverFacade.joinGame(new JoinGameRequest(playerColor, gameID), authData.authToken());
+                boolean playerIsWhite = playerColor.equals("WHITE");
+
+                return DrawBoard.draw(playerIsWhite);
+            }
+            catch (IndexOutOfBoundsException e) {
+                throw new ResponseException(400, "Please enter a valid game number, thanks");
             }
         }
+        throw new ResponseException(400, "Expected: <gameID>, didn't get it :(");
     }
+
 
     private void verifyLoggedIn() throws ResponseException {
         if(state == SIGNEDOUT) {
