@@ -15,10 +15,8 @@ public class DrawBoard {
     private static final String EM_SPACE = "\u2003";
     private static final String PUNC_SPACE = "\u2008";
 
-    public static String draw(boolean isPlayerWhite) {
+    public static String draw(ChessBoard board, boolean isPlayerWhite) {
         var stringBuilder = new StringBuilder();
-        ChessBoard board = new ChessBoard();
-        board.resetBoard();
         drawColumns(stringBuilder, isPlayerWhite);
 
         if(isPlayerWhite) {

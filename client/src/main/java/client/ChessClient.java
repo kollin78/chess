@@ -167,12 +167,12 @@ public class ChessClient {
             try {
                 int listNumber = Integer.parseInt(params[0]);
                 String playerColor = params[1].toUpperCase();
-                int gameID = gameList.get(listNumber - 1).gameID();
+                GameData selectedGame = gameList.get(listNumber - 1);
 
-                serverFacade.joinGame(new JoinGameRequest(playerColor, gameID), authData.authToken());
+                serverFacade.joinGame(new JoinGameRequest(playerColor, selectedGame.gameID()), authData.authToken());
                 boolean playerIsWhite = playerColor.equals("WHITE");
 
-                return DrawBoard.draw(playerIsWhite);
+                return DrawBoard.draw(selectedGame.game().getBoard(), playerIsWhite);
             }
             catch (IndexOutOfBoundsException e) {
                 throw new ResponseException(400, "Please enter a valid game number, thanks");
@@ -186,11 +186,9 @@ public class ChessClient {
         if(params.length >= 1) {
             try {
                 int listNumber = Integer.parseInt(params[0]);
-                int gameID = gameList.get(listNumber - 1).gameID();
+                GameData selectedGame = gameList.get(listNumber - 1);
 
-                serverFacade.joinGame(new JoinGameRequest(null, gameID), authData.authToken());
-
-                return DrawBoard.draw(true);
+                return DrawBoard.draw(selectedGame.game().getBoard(), true);
             } catch (IndexOutOfBoundsException e) {
                 throw new ResponseException(400, "Game number doesn't exist, please pick a valid game number from listGames");
             }
