@@ -43,6 +43,9 @@ public class GameService {
         if(playerColor == null) {
             return;
         }
+        if(playerColor.isEmpty()) {
+            throw new DataAccessException("Error: bad request");
+        }
 
         String whiteUser = gameData.whiteUsername();
         String blackUser = gameData.blackUsername();
