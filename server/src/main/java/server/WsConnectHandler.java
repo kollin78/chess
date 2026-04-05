@@ -1,4 +1,4 @@
 package server;
 
-public record WsConnectHandler() {
+public interface WsConnectHandler {
 }

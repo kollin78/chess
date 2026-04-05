@@ -1,4 +1,4 @@
 package server;
 
-public class WsRequestHandler {
+public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler{
 }

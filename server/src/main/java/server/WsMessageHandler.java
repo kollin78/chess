@@ -1,4 +1,4 @@
 package server;
 
-public record WsMessageHandler() {
+public interface WsMessageHandler {
 }

@@ -1,4 +1,4 @@
 package server;
 
-public record WsCloseHandler() {
+public interface WsCloseHandler {
 }
