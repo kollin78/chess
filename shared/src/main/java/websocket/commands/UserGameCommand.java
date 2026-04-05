@@ -23,13 +23,10 @@ public class UserGameCommand {
     }
 
     public enum CommandType {
-        HELP,
-        REDRAW,
         CONNECT,
         MAKE_MOVE,
         LEAVE,
-        RESIGN,
-        HIGHLIGHT_MOVES
+        RESIGN
     }
 
     public CommandType getCommandType() {
@@ -43,6 +40,8 @@ public class UserGameCommand {
     public Integer getGameID() {
         return gameID;
     }
+
+
 
     @Override
     public boolean equals(Object o) {
