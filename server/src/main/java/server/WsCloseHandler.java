@@ -1,5 +1,7 @@
 package server;
 
+import io.javalin.websocket.WsConnectContext;
+
 public interface WsCloseHandler {
-    void onClose(String authToken);
+    void handleClose(WsConnectContext ctx);
 }

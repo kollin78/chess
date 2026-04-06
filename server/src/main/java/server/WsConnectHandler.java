@@ -1,7 +1,7 @@
 package server;
 
-import jakarta.websocket.Session;
+import io.javalin.websocket.WsConnectContext;
 
 public interface WsConnectHandler {
-    void onConnect(String authToken, Session session);
+    void handleConnect(WsConnectContext ctx);
 }

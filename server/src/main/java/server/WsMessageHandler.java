@@ -1,8 +1,8 @@
 package server;
 
 
-import websocket.commands.UserGameCommand;
+import io.javalin.websocket.WsConnectContext;
 
 public interface WsMessageHandler {
-    void onMessage(String authToken, UserGameCommand userGameCommand);
+    void handleMessage(WsConnectContext ctx);
 }
