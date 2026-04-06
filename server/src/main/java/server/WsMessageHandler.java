@@ -1,8 +1,8 @@
 package server;
 
 
-import io.javalin.websocket.WsConnectContext;
+import io.javalin.websocket.WsMessageContext;
 
 public interface WsMessageHandler {
-    void handleMessage(WsConnectContext ctx);
+    void handleMessage(WsMessageContext ctx);
 }

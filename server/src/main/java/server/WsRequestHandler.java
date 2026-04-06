@@ -5,10 +5,14 @@ import dataaccess.DataAccessException;
 import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsMessageContext;
 import model.AuthData;
+import model.GameData;
 import org.eclipse.jetty.server.session.*;
 import websocket.commands.UserGameCommand;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
+import websocket.messages.ServerMessage;
+
+import java.io.IOException;
 
 public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler{
     private final ConnectionManager connectionManager = new ConnectionManager();
@@ -39,7 +43,7 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             UserGameCommand userGameCommand = new Gson().fromJson(jsonMsg, UserGameCommand.class);
 
             switch(userGameCommand.getCommandType()) {
-                case CONNECT -> doConnect();
+                case CONNECT -> doConnect(userGameCommand, ctx);
                 case MAKE_MOVE -> makeMove();
                 case LEAVE -> leave();
                 case RESIGN -> resign();
@@ -54,13 +58,32 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
         try {
             AuthData authData = authDAO.getAuth(userGameCommand.getAuthToken());
             if(authData == null) {
+                //error message
+                return;
+            }
+            GameData gameData = gameDAO.getGame(userGameCommand.getGameID());
+            if(gameData == null) {
+                //error message
                 return;
             }
 
             String username = authData.username();
-            connectionManager.add(userGameCommand.getGameID(), username, ctx.session);
+            int gameID = userGameCommand.getGameID();
+            connectionManager.add(gameID, username, ctx.session);
+
+            ServerMessage loadGame = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+            loadGame.setGame(gameData);
+            ctx.send(new Gson().toJson(loadGame));
+
+            String message = (username + " has joined the game, hold on to your booty.");
+            ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+            notification.setMessage(message);
+            connectionManager.broadcast(gameID, ctx.session, notification);
         } catch(DataAccessException e) {
             //do smth with error
+        } catch (IOException e) {
+            //intellij said we needed this
+            throw new RuntimeException(e);
         }
     }
 
