@@ -1,13 +1,11 @@
 package server;
 
-
 import com.google.gson.Gson;
 import io.javalin.websocket.WsConnectContext;
-import jakarta.websocket.Session;
+import io.javalin.websocket.WsMessageContext;
 import org.eclipse.jetty.server.session.*;
 import websocket.commands.UserGameCommand;
-import websocket.messages.ServerMessage;
-import jakarta.websocket.Session;
+
 
 public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler{
 
@@ -26,8 +24,21 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     @Override
-    public void handleMessage(WsConnectContext ctx) {
+    public void handleMessage(WsMessageContext ctx) {
+        try {
+            String jsonMsg = ctx.message();
+            UserGameCommand userGameCommand = new Gson().fromJson(jsonMsg, UserGameCommand.class);
 
+            switch(userGameCommand.getCommandType()) {
+                case CONNECT -> doConnect();
+                case MAKE_MOVE -> makeMove();
+                case LEAVE -> leave();
+                case RESIGN -> resign();
+                default -> System.out.println("Please enter a valid command");
+            }
+        } catch(Exception e) {
+            //do smth with error
+        }
     }
 
     private void doConnect() {
