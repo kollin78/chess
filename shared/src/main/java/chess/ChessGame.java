@@ -16,6 +16,7 @@ public class ChessGame {
     private ChessBoard board = new ChessBoard();
 
     private ChessMove previousMove;
+    private boolean isPlayerGivenUp = false;
 
     public ChessGame() {
         this.teamTurn = TeamColor.WHITE;
@@ -357,7 +358,11 @@ public class ChessGame {
         return isInCheckmate(TeamColor.BLACK)
                 || isInCheckmate(TeamColor.WHITE)
                 || isInStalemate(TeamColor.WHITE)
-                || isInStalemate(TeamColor.BLACK);
+                || isInStalemate(TeamColor.BLACK)
+                || isPlayerGivenUp;
+    }
+    public void setResign(boolean isPlayerGivenUp) {
+        this.isPlayerGivenUp = isPlayerGivenUp;
     }
 
     @Override

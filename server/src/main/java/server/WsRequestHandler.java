@@ -5,6 +5,7 @@ import chess.ChessMove;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dataaccess.DataAccessException;
+import io.javalin.websocket.WsCloseContext;
 import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsMessageContext;
 import model.AuthData;
@@ -28,7 +29,7 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     @Override
-    public void handleClose(WsConnectContext ctx) {
+    public void handleClose(WsCloseContext ctx) {
         connectionManager.remove(ctx.session);
         System.out.println("Disconnecting");
     }
@@ -243,6 +244,9 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
             notification.setMessage("User: " + username + " has resigned (what a loser)... game over I guess.");
             connectionManager.broadcast(gameData.gameID(), null, notification);
+
+            gameData.game().setResign(true);
+            gameDAO.updateGame(gameData);
 
         } catch (DataAccessException e) {
             //intellij says I need this, per usual

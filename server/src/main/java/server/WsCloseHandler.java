@@ -1,7 +1,7 @@
 package server;
 
-import io.javalin.websocket.WsConnectContext;
+import io.javalin.websocket.WsCloseContext;
 
 public interface WsCloseHandler {
-    void handleClose(WsConnectContext ctx);
+    void handleClose(WsCloseContext ctx);
 }
