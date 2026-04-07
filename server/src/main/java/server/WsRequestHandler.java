@@ -48,8 +48,8 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             switch(userGameCommand.getCommandType()) {
                 case CONNECT -> doConnect(userGameCommand, ctx);
                 case MAKE_MOVE -> makeMove(jsonMsg, ctx);
-                case LEAVE -> leave();
-                case RESIGN -> resign();
+                case LEAVE -> leave(userGameCommand, ctx);
+                case RESIGN -> resign(userGameCommand, ctx);
                 default -> System.out.println("Please enter a valid command");
             }
         } catch(Exception e) {
@@ -145,18 +145,23 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             connectionManager.broadcast(gameData.gameID(), ctx.session, notification);
 
             if(chessGame.isGameFinished()) {
+                ServerMessage gameOverNotification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 if(chessGame.isInCheckmate(ChessGame.TeamColor.WHITE)) {
-                    notification.setMessage("Black Wins!");
+                    gameOverNotification.setMessage("Black Wins!");
                 } else if(chessGame.isInCheckmate(ChessGame.TeamColor.BLACK)) {
-                    notification.setMessage("White Wins!");
+                    gameOverNotification.setMessage("White Wins!");
                 } else if(chessGame.isInStalemate(ChessGame.TeamColor.WHITE) || chessGame.isInStalemate(ChessGame.TeamColor.BLACK)) {
-                    notification.setMessage("Nobody wins, very sad :(");
-                } else if(chessGame.isInCheck(ChessGame.TeamColor.WHITE)) {
-                    notification.setMessage("White is in check.");
-                } else if(chessGame.isInCheck(ChessGame.TeamColor.BLACK)) {
-                    notification.setMessage("Black is in check.");
+                    gameOverNotification.setMessage("Nobody wins, very sad :(");
                 }
-                connectionManager.broadcast(gameData.gameID(), null, notification);
+                connectionManager.broadcast(gameData.gameID(), null, gameOverNotification);
+            } else {
+                ServerMessage inCheckNotification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+                if(chessGame.isInCheck(ChessGame.TeamColor.WHITE)) {
+                    inCheckNotification.setMessage("White is in check.");
+                } else if(chessGame.isInCheck(ChessGame.TeamColor.BLACK)) {
+                    inCheckNotification.setMessage("Black is in check.");
+                }
+                connectionManager.broadcast(gameData.gameID(), null, inCheckNotification);
             }
         } catch(Exception e) {
             //tell user smth brokey
@@ -164,12 +169,90 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     }
 
-    private void leave() {
+    private void leave(UserGameCommand userGameCommand, WsMessageContext ctx) {
+        try {
+            AuthData authData = authDAO.getAuth(userGameCommand.getAuthToken());
+            String username = authData.username();
+            int gameID = userGameCommand.getGameID();
 
+            connectionManager.remove(ctx.session);
+
+            GameData gameData = gameDAO.getGame(gameID);
+            if(gameData == null) {
+                return;
+            }
+            String whiteUsername = gameData.whiteUsername();
+            String blackUsername = gameData.blackUsername();
+            if(username.equals(whiteUsername)) {
+                whiteUsername = null;
+            } else if(username.equals(blackUsername)) {
+                blackUsername = null;
+            }
+            GameData updatedGame = new GameData(gameID, whiteUsername, blackUsername, gameData.gameName(), gameData.game());
+            gameDAO.updateGame(updatedGame);
+
+            ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+            notification.setMessage(username + " has left us with a hole in our heart and an unfilled space in our board or spectator area :,) \n You will be missed.");
+            connectionManager.broadcast(gameID, ctx.session, notification);
+        } catch (DataAccessException e) {
+            //intellij says I need this
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            //intellij says I need this one too
+            throw new RuntimeException(e);
+        } catch(Exception e) {
+            //do something useful with that
+        }
     }
 
-    private void resign() {
+    private void resign(UserGameCommand userGameCommand, WsMessageContext ctx) {
+        try {
+            AuthData authData = authDAO.getAuth(userGameCommand.getAuthToken());
+            if(authData == null) {
+                //user is dumb
+                return;
+            }
+            GameData gameData = gameDAO.getGame(userGameCommand.getGameID());
+            if(gameData == null) {
+                //user is dumb
+                return;
+            }
 
+            String username = authData.username();
+            boolean isWhite = false;
+            boolean isBlack = false;
+            if(username.equals(gameData.whiteUsername())) {
+                isWhite = true;
+            } else if(username.equals(gameData.blackUsername())) {
+                isBlack = true;
+            }
+
+            if(!isWhite && !isBlack) {
+                ServerMessage error = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                error.setError("Error: how would an observer even resign?");
+                ctx.send(new Gson().toJson(error));
+                return;
+            }
+            if(gameData.game().isGameFinished()) {
+                ServerMessage error = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                error.setError("Error: the game is already over, bozo");
+                ctx.send(new Gson().toJson(error));
+                return;
+            }
+
+            ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+            notification.setMessage("User: " + username + " has resigned (what a loser)... game over I guess.");
+            connectionManager.broadcast(gameData.gameID(), null, notification);
+
+        } catch (DataAccessException e) {
+            //intellij says I need this, per usual
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            //again, intellij coming in clutch
+            throw new RuntimeException(e);
+        } catch(Exception e) {
+            //do somthing with these errors probably
+        }
     }
 
 }
