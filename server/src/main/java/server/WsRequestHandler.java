@@ -10,7 +10,6 @@ import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsMessageContext;
 import model.AuthData;
 import model.GameData;
-import org.eclipse.jetty.server.session.*;
 import websocket.commands.UserGameCommand;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
@@ -54,7 +53,9 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
                 default -> System.out.println("Please enter a valid command");
             }
         } catch(Exception e) {
-            //do smth with error
+            ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            errorMessage.setErrorMessage("Error: an error occurred, amigo");
+            ctx.send(new Gson().toJson(errorMessage));
         }
     }
 
@@ -62,12 +63,16 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
         try {
             AuthData authData = authDAO.getAuth(userGameCommand.getAuthToken());
             if(authData == null) {
-                //error message
+                ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                errorMessage.setErrorMessage("Error: Unauthorized, pal");
+                ctx.send(new Gson().toJson(errorMessage));
                 return;
             }
             GameData gameData = gameDAO.getGame(userGameCommand.getGameID());
             if(gameData == null) {
-                //error message
+                ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                errorMessage.setErrorMessage("Error: invalid game data, buddy");
+                ctx.send(new Gson().toJson(errorMessage));
                 return;
             }
 
@@ -84,7 +89,9 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             notification.setMessage(message);
             connectionManager.broadcast(gameID, ctx.session, notification);
         } catch(DataAccessException e) {
-            //do smth with error
+            ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            errorMessage.setErrorMessage("Error: an errorMessage occurred, amigo");
+            ctx.send(new Gson().toJson(errorMessage));
         } catch (IOException e) {
             //intellij said we needed this
             throw new RuntimeException(e);
@@ -95,17 +102,23 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
         UserGameCommand userGameCommand = new Gson().fromJson(jsonMsg, UserGameCommand.class);
         AuthData authData = authDAO.getAuth(userGameCommand.getAuthToken());
         if(authData == null) {
-            //let user know they're dumb
+            ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            errorMessage.setErrorMessage("Error: unauthorized, bub");
+            ctx.send(new Gson().toJson(errorMessage));
             return;
         }
         GameData gameData = gameDAO.getGame(userGameCommand.getGameID());
         if(gameData == null) {
-            //let user know they're dumb in a different way
+            ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            errorMessage.setErrorMessage("Error: you got no game data, friend");
+            ctx.send(new Gson().toJson(errorMessage));
             return;
         }
         ChessGame chessGame = gameData.game();
         if(chessGame.isGameFinished()) {
-            //let user know they are dumb in a whole new way
+            ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            errorMessage.setErrorMessage("Error: how are you expecting to make a move in a game that is finished?");
+            ctx.send(new Gson().toJson(errorMessage));
             return;
         }
 
@@ -119,7 +132,9 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
 
         if((isWhite && (chessGame.getTeamTurn() != ChessGame.TeamColor.WHITE)) || (isBlack && (chessGame.getTeamTurn() != ChessGame.TeamColor.BLACK))) {
-            //tell player to way their turn
+            ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            errorMessage.setErrorMessage("Error: wait your turn, bud");
+            ctx.send(new Gson().toJson(errorMessage));
             return;
         }
 
@@ -165,7 +180,9 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
                 connectionManager.broadcast(gameData.gameID(), null, inCheckNotification);
             }
         } catch(Exception e) {
-            //tell user smth brokey
+            ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            errorMessage.setErrorMessage("Error: an error occurred, amigo");
+            ctx.send(new Gson().toJson(errorMessage));
         }
 
     }
@@ -180,6 +197,9 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
 
             GameData gameData = gameDAO.getGame(gameID);
             if(gameData == null) {
+                ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                errorMessage.setErrorMessage("Error: you got no game data, guy");
+                ctx.send(new Gson().toJson(errorMessage));
                 return;
             }
             String whiteUsername = gameData.whiteUsername();
@@ -203,6 +223,9 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             throw new RuntimeException(e);
         } catch(Exception e) {
             //do something useful with that
+            ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            errorMessage.setErrorMessage("Error: an error occurred while leaving match");
+            ctx.send(new Gson().toJson(errorMessage));
         }
     }
 
@@ -210,12 +233,16 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
         try {
             AuthData authData = authDAO.getAuth(userGameCommand.getAuthToken());
             if(authData == null) {
-                //user is dumb
+                ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                errorMessage.setErrorMessage("Error: Unauthorized, pal");
+                ctx.send(new Gson().toJson(errorMessage));
                 return;
             }
             GameData gameData = gameDAO.getGame(userGameCommand.getGameID());
             if(gameData == null) {
-                //user is dumb
+                ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                errorMessage.setErrorMessage("Error: you ain't got no game data, fred");
+                ctx.send(new Gson().toJson(errorMessage));
                 return;
             }
 
@@ -229,15 +256,15 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             }
 
             if(!isWhite && !isBlack) {
-                ServerMessage error = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-                error.setError("Error: how would an observer even resign?");
-                ctx.send(new Gson().toJson(error));
+                ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                errorMessage.setErrorMessage("Error: how would an observer even resign?");
+                ctx.send(new Gson().toJson(errorMessage));
                 return;
             }
             if(gameData.game().isGameFinished()) {
-                ServerMessage error = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-                error.setError("Error: the game is already over, bozo");
-                ctx.send(new Gson().toJson(error));
+                ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                errorMessage.setErrorMessage("Error: the game is already over, bozo");
+                ctx.send(new Gson().toJson(errorMessage));
                 return;
             }
 
@@ -256,6 +283,9 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             throw new RuntimeException(e);
         } catch(Exception e) {
             //do somthing with these errors probably
+            ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            errorMessage.setErrorMessage("Error: an error occurred, amigo");
+            ctx.send(new Gson().toJson(errorMessage));
         }
     }
 
