@@ -67,7 +67,7 @@ public class ChessClient {
                 return switch(cmd) {
                     case "redraw" -> DrawBoard.draw(currentGame.getBoard(), isPlayerWhite, null, null);
                     case "leave" -> leave();
-                    case "makeMove" -> makeMove(params);
+                    case "move" -> makeMove(params);
                     case "resign" -> resign();
                     case "highlight" -> highlight(params);
                     default -> help();
@@ -104,7 +104,7 @@ public class ChessClient {
             return """
                 redraw - redraw board from server
                 leave - exit current game
-                makeMove <FROM> <TO> - makes move from <FROM> position to <TO> position
+                move <FROM> <TO> - makes move from <FROM> position to <TO> position
                 resign - quit like a lil baby
                 highlight <POSITION> - highlights valid moves for piece at <POSITION>
                 help
@@ -197,6 +197,8 @@ public class ChessClient {
         verifyLoggedIn();
         if(params.length >= 2) {
             try {
+                var gamesObject = serverFacade.listGames(authData.authToken()).games();
+                gameList = new ArrayList<>(gamesObject);
                 int listNumber = Integer.parseInt(params[0]);
                 String playerColor = params[1].toUpperCase();
                 GameData selectedGame = gameList.get(listNumber - 1);
@@ -208,12 +210,11 @@ public class ChessClient {
                 webSocketFacade = new WebSocketFacade(serverUrl, this);
                 webSocketFacade.connect(authData.authToken(), currentGameID);
                 state = PLAYINGGAME;
-                boolean playerIsWhite = playerColor.equals("WHITE");
-                isPlayerWhite = playerIsWhite;
+                isPlayerWhite = playerColor.equals("WHITE");
 
 
 
-                return DrawBoard.draw(selectedGame.game().getBoard(), playerIsWhite, null, null);
+                return String.format("Successfully joined game as %s", playerColor);
             }
             catch (IndexOutOfBoundsException e) {
                 throw new ResponseException(400, "Please enter a valid game number, thanks");
@@ -237,7 +238,7 @@ public class ChessClient {
                 webSocketFacade = new WebSocketFacade(serverUrl, this);
                 webSocketFacade.connect(authData.authToken(), currentGameID);
 
-                return DrawBoard.draw(selectedGame.game().getBoard(), isPlayerWhite, null, null);
+                return "Spectating game";
             } catch (IndexOutOfBoundsException e) {
                 throw new ResponseException(400, "Game number doesn't exist, please pick a valid game number from listGames");
             } catch (Exception e) {
@@ -262,12 +263,12 @@ public class ChessClient {
     }
 
     private String makeMove(String... params) throws ResponseException, IOException {
-        if(params.length < 3) {
+        if(params.length < 2) {
             throw new ResponseException(400, "Expected: makeMove <FROM> <TO>, but probably got invalid positions");
         }
 
-        ChessPosition fromPosition = getPositionFromInput(params[1]);
-        ChessPosition toPosition = getPositionFromInput(params[2]);
+        ChessPosition fromPosition = getPositionFromInput(params[0]);
+        ChessPosition toPosition = getPositionFromInput(params[1]);
         ChessMove newMove = new ChessMove(fromPosition, toPosition, null);
 
         webSocketFacade.makeMove(authData.authToken(), currentGameID, newMove);
@@ -302,9 +303,15 @@ public class ChessClient {
 
     private String getErrorMessageFromJson(String jsonError) {
         try {
-            var map = new Gson().fromJson(jsonError, Map.class);
-            if(map.containsKey("message")) {
-                return map.get("message").toString();
+            if(jsonError != null) {
+                int startInd = jsonError.indexOf('{');
+                if(startInd != -1) {
+                    String stringError = jsonError.substring(startInd);
+                    var map = new Gson().fromJson(stringError, Map.class);
+                    if(map.containsKey("message")) {
+                        return map.get("message").toString();
+                    }
+                }
             }
         } catch(Exception e) {
             return "An unknown error occurred";
@@ -323,9 +330,10 @@ public class ChessClient {
         switch(serverMessage.getServerMessageType()) {
             case LOAD_GAME -> {
                 this.currentGame = serverMessage.getGame();
-                System.out.println("\n\n" + DrawBoard.draw(currentGame.getBoard(), isPlayerWhite, null, null));
+                System.out.println("\n" + DrawBoard.draw(currentGame.getBoard(), isPlayerWhite, null, null));
                 printPrompt();
             } case NOTIFICATION -> {
+                System.out.println("\n" + DrawBoard.draw(currentGame.getBoard(), isPlayerWhite, null, null));
                 System.out.println(SET_TEXT_COLOR_MAGENTA + "\n\n" + serverMessage.getMessage());
                 printPrompt();
             } case ERROR -> {

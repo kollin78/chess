@@ -2,6 +2,7 @@ package server;
 
 import chess.ChessGame;
 import chess.ChessMove;
+import chess.ChessPiece;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import dataaccess.DataAccessException;
@@ -54,7 +55,7 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             }
         } catch(Exception e) {
             ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-            errorMessage.setErrorMessage("Error: an error occurred, amigo");
+            errorMessage.setErrorMessage("Error: an error occurred, amigo (in handleMessage)\n " + e.getMessage());
             ctx.send(new Gson().toJson(errorMessage));
         }
     }
@@ -84,13 +85,21 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             loadGame.setGame(gameData);
             ctx.send(new Gson().toJson(loadGame));
 
-            String message = (username + " has joined the game, hold on to your booty.");
+            String playerColor = "observer";
+            if(username.equals(gameData.whiteUsername())) {
+                playerColor = "white player";
+            } else if(username.equals(gameData.blackUsername())) {
+                playerColor = "black player";
+            }
+
+            String message = (username + " has joined the game as " + playerColor + ", hold on to your booty.");
             ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
             notification.setMessage(message);
             connectionManager.broadcast(gameID, ctx.session, notification);
         } catch(DataAccessException e) {
+
             ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-            errorMessage.setErrorMessage("Error: an errorMessage occurred, amigo");
+            errorMessage.setErrorMessage("Error: " + e.getMessage());
             ctx.send(new Gson().toJson(errorMessage));
         } catch (IOException e) {
             //intellij said we needed this
@@ -147,6 +156,7 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
         try {
             JsonObject jsonMove = new Gson().fromJson(jsonMsg, JsonObject.class);
             ChessMove normalMove = new Gson().fromJson(jsonMove.get("move"), ChessMove.class);
+            ChessPiece movePiece = gameData.game().getBoard().getPiece(normalMove.getStartPosition());
             chessGame.makeMove(normalMove);
 
             GameData updatedGameData = new GameData(
@@ -163,16 +173,21 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             connectionManager.broadcast(gameData.gameID(), null, loadGame);
 
             ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-            notification.setMessage(username + " made move " + normalMove.toString());
+            String pieceType = "";
+            if(movePiece != null) {
+                pieceType = movePiece.getPieceType().toString();
+            }
+            notification.setMessage(username + " made move " + pieceType + " " + normalMove.toString());
+
             connectionManager.broadcast(gameData.gameID(), ctx.session, notification);
 
             if(chessGame.isGameFinished()) {
                 ServerMessage gameOverNotification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 if(chessGame.isInCheckmate(ChessGame.TeamColor.WHITE)) {
-                    gameOverNotification.setMessage("Black Wins!");
+                    gameOverNotification.setMessage( gameData.blackUsername() + " (Black) Wins!");
                     connectionManager.broadcast(gameData.gameID(), null, gameOverNotification);
                 } else if(chessGame.isInCheckmate(ChessGame.TeamColor.BLACK)) {
-                    gameOverNotification.setMessage("White Wins!");
+                    gameOverNotification.setMessage(gameData.whiteUsername() + " (White) Wins!");
                     connectionManager.broadcast(gameData.gameID(), null, gameOverNotification);
                 } else if(chessGame.isInStalemate(ChessGame.TeamColor.WHITE) || chessGame.isInStalemate(ChessGame.TeamColor.BLACK)) {
                     gameOverNotification.setMessage("Nobody wins, very sad :(");
@@ -182,16 +197,17 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             } else {
                 ServerMessage inCheckNotification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 if(chessGame.isInCheck(ChessGame.TeamColor.WHITE)) {
-                    inCheckNotification.setMessage("White is in check.");
+                    inCheckNotification.setMessage(gameData.whiteUsername() + " (White) is in check.");
                     connectionManager.broadcast(gameData.gameID(), null, inCheckNotification);
                 } else if(chessGame.isInCheck(ChessGame.TeamColor.BLACK)) {
-                    inCheckNotification.setMessage("Black is in check.");
+                    inCheckNotification.setMessage(gameData.blackUsername() + " (Black) is in check.");
                     connectionManager.broadcast(gameData.gameID(), null, inCheckNotification);
                 }
             }
         } catch(Exception e) {
+            e.printStackTrace();
             ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-            errorMessage.setErrorMessage("Error: an error occurred, amigo");
+            errorMessage.setErrorMessage(String.format("Error: an error occurred, amigo (in makeMove), %s", e.getMessage()));
             ctx.send(new Gson().toJson(errorMessage));
         }
 
@@ -294,7 +310,7 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
         } catch(Exception e) {
             //do somthing with these errors probably
             ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-            errorMessage.setErrorMessage("Error: an error occurred, amigo");
+            errorMessage.setErrorMessage("Error: an error occurred, amigo (in resign)");
             ctx.send(new Gson().toJson(errorMessage));
         }
     }
