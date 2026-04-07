@@ -66,8 +66,27 @@ public class DrawBoard {
             }
 
             boolean isDarkSquare = ((row + printedCol) % 2 == 0);
+            boolean validDestination = false;
+            ChessPosition newPosition = new ChessPosition(row, printedCol);
 
-            if(isDarkSquare) {
+            if(validMoves != null) {
+                for(ChessMove move : validMoves) {
+                    if(move.getEndPosition().equals(newPosition)) {
+                        validDestination = true;
+                        break;
+                    }
+                }
+            }
+
+            if(newPosition.equals(startPosition)) {
+                stringBuilder.append(SET_BG_COLOR_YELLOW);
+            } else if(validDestination) {
+                if(isDarkSquare) {
+                    stringBuilder.append(SET_BG_COLOR_DARK_GREEN);
+                } else {
+                    stringBuilder.append(SET_BG_COLOR_GREEN);
+                }
+            } else if(isDarkSquare) {
                 stringBuilder.append(SET_BG_COLOR_BLACK);
             } else {
                 stringBuilder.append(SET_BG_COLOR_LIGHT_GREY);

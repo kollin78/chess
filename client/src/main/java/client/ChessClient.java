@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
+import chess.ChessGame;
 import com.google.gson.Gson;
 import model.*;
 import exception.ResponseException;
+import websocket.messages.ServerMessage;
 
 import static client.State.*;
 import static ui.EscapeSequences.*;
@@ -19,6 +21,9 @@ public class ChessClient {
     private State state = SIGNEDOUT;
     private AuthData authData = null;
     private ArrayList<GameData> gameList = new ArrayList<>();
+    private ChessGame currentGame = null;
+    private ChessGame.TeamColor playerColor = null;
+    private boolean isPlayerWhite = false;
 
     public ChessClient(String serverUrl) {
         serverFacade = new ServerFacade(serverUrl);
@@ -171,8 +176,9 @@ public class ChessClient {
 
                 serverFacade.joinGame(new JoinGameRequest(playerColor, selectedGame.gameID()), authData.authToken());
                 boolean playerIsWhite = playerColor.equals("WHITE");
+                isPlayerWhite = playerIsWhite;
 
-                return DrawBoard.draw(selectedGame.game().getBoard(), playerIsWhite);
+                return DrawBoard.draw(selectedGame.game().getBoard(), playerIsWhite, );
             }
             catch (IndexOutOfBoundsException e) {
                 throw new ResponseException(400, "Please enter a valid game number, thanks");
@@ -200,6 +206,22 @@ public class ChessClient {
     private void verifyLoggedIn() throws ResponseException {
         if(state == SIGNEDOUT) {
             throw new ResponseException(401, "Pls sign in before trying anything else, thanks");
+        }
+    }
+
+    public void messageHandler(ServerMessage serverMessage) {
+        switch(serverMessage.getServerMessageType()) {
+            case LOAD_GAME -> {
+                this.currentGame = serverMessage.getGame();
+                System.out.println("\n\n" + DrawBoard.draw(currentGame.getBoard(), isPlayerWhite, null, null));
+                printPrompt();
+            } case NOTIFICATION -> {
+                System.out.println(SET_TEXT_COLOR_MAGENTA + "\n\n" + serverMessage.getMessage());
+                printPrompt();
+            } case ERROR -> {
+                System.out.println(SET_TEXT_COLOR_RED + "\n\n" + serverMessage.getErrorMessage());
+                printPrompt();
+            }
         }
     }
 }

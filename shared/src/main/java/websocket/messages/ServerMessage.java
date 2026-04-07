@@ -57,4 +57,16 @@ public class ServerMessage {
     public void setGame(GameData gameData) {
         this.game = gameData.game();
     }
+
+    public ChessGame getGame() {
+        return game;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
 }
