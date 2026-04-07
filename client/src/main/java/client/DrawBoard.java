@@ -1,9 +1,8 @@
 package client;
 
-import chess.ChessBoard;
-import chess.ChessGame;
-import chess.ChessPiece;
-import chess.ChessPosition;
+import chess.*;
+
+import java.util.Collection;
 
 import static ui.EscapeSequences.*;
 
@@ -15,17 +14,17 @@ public class DrawBoard {
     private static final String EM_SPACE = "\u2003";
     private static final String PUNC_SPACE = "\u2008";
 
-    public static String draw(ChessBoard board, boolean isPlayerWhite) {
+    public static String draw(ChessBoard board, boolean isPlayerWhite, Collection<ChessMove> validMoves, ChessPosition startPosition) {
         var stringBuilder = new StringBuilder();
         drawColumns(stringBuilder, isPlayerWhite);
 
         if(isPlayerWhite) {
             for(int row = 8; row >= 1; row--) {
-                drawRows(stringBuilder, row, board, true);
+                drawRows(stringBuilder, row, board, true, validMoves, startPosition);
             }
         } else {
             for(int row = 1; row <= 8; row++) {
-                drawRows(stringBuilder, row, board, false);
+                drawRows(stringBuilder, row, board, false, validMoves, startPosition);
             }
         }
 
@@ -54,7 +53,7 @@ public class DrawBoard {
         stringBuilder.append(TRIPLE_SPACE).append(PUNC_SPACE).append(PUNC_SPACE).append(RESET_TEXT_COLOR).append(RESET_BG_COLOR).append("\n");
     }
 
-    private static void drawRows(StringBuilder stringBuilder, int row, ChessBoard board, boolean isPlayerWhite) {
+    private static void drawRows(StringBuilder stringBuilder, int row, ChessBoard board, boolean isPlayerWhite, Collection<ChessMove> validMoves, ChessPosition startPosition) {
         stringBuilder.append(SET_BG_COLOR_DARK_GREY).append(SET_TEXT_COLOR_MAGENTA).append(SINGLE_SPACE).append(row).append(EM_SPACE);
 
         for(int column = 1; column <= 8; column++) {
