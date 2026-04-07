@@ -1,6 +1,9 @@
 package server;
 
+import chess.ChessGame;
+import chess.ChessMove;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import dataaccess.DataAccessException;
 import io.javalin.websocket.WsConnectContext;
 import io.javalin.websocket.WsMessageContext;
@@ -87,7 +90,77 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
     }
 
-    private void makeMove() {
+    private void makeMove(String jsonMsg, WsMessageContext ctx) throws Exception {
+        UserGameCommand userGameCommand = new Gson().fromJson(jsonMsg, UserGameCommand.class);
+        AuthData authData = authDAO.getAuth(userGameCommand.getAuthToken());
+        if(authData == null) {
+            //let user know they're dumb
+            return;
+        }
+        GameData gameData = gameDAO.getGame(userGameCommand.getGameID());
+        if(gameData == null) {
+            //let user know they're dumb in a different way
+            return;
+        }
+        ChessGame chessGame = gameData.game();
+        if(chessGame.isGameFinished()) {
+            //let user know they are dumb in a whole new way
+            return;
+        }
+
+        String username = authData.username();
+        boolean isWhite = false;
+        boolean isBlack = false;
+        if(username.equals(gameData.whiteUsername())) {
+            isWhite = true;
+        } else if(username.equals(gameData.blackUsername())) {
+            isBlack = true;
+        }
+
+        if((isWhite && (chessGame.getTeamTurn() != ChessGame.TeamColor.WHITE)) || (isBlack && (chessGame.getTeamTurn() != ChessGame.TeamColor.BLACK))) {
+            //tell player to way their turn
+            return;
+        }
+
+        try {
+            JsonObject jsonMove = new Gson().fromJson(jsonMsg, JsonObject.class);
+            ChessMove normalMove = new Gson().fromJson(jsonMove.get("move"), ChessMove.class);
+            chessGame.makeMove(normalMove);
+
+            GameData updatedGameData = new GameData(
+                    gameData.gameID(),
+                    gameData.whiteUsername(),
+                    gameData.blackUsername(),
+                    gameData.gameName(),
+                    chessGame
+            );
+            gameDAO.updateGame(updatedGameData);
+
+            ServerMessage loadGame = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+            loadGame.setGame(updatedGameData);
+            connectionManager.broadcast(gameData.gameID(), null, loadGame);
+
+            ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+            notification.setMessage(username + " made move " + normalMove.toString());
+            connectionManager.broadcast(gameData.gameID(), ctx.session, notification);
+
+            if(chessGame.isGameFinished()) {
+                if(chessGame.isInCheckmate(ChessGame.TeamColor.WHITE)) {
+                    notification.setMessage("Black Wins!");
+                } else if(chessGame.isInCheckmate(ChessGame.TeamColor.BLACK)) {
+                    notification.setMessage("White Wins!");
+                } else if(chessGame.isInStalemate(ChessGame.TeamColor.WHITE) || chessGame.isInStalemate(ChessGame.TeamColor.BLACK)) {
+                    notification.setMessage("Nobody wins, very sad :(");
+                } else if(chessGame.isInCheck(ChessGame.TeamColor.WHITE)) {
+                    notification.setMessage("White is in check.");
+                } else if(chessGame.isInCheck(ChessGame.TeamColor.BLACK)) {
+                    notification.setMessage("Black is in check.");
+                }
+                connectionManager.broadcast(gameData.gameID(), null, notification);
+            }
+        } catch(Exception e) {
+            //tell user smth brokey
+        }
 
     }
 

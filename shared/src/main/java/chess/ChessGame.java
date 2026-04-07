@@ -353,6 +353,13 @@ public class ChessGame {
         return true;
     }
 
+    public boolean isGameFinished() {
+        return isInCheckmate(TeamColor.BLACK)
+                || isInCheckmate(TeamColor.WHITE)
+                || isInStalemate(TeamColor.WHITE)
+                || isInStalemate(TeamColor.BLACK);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {

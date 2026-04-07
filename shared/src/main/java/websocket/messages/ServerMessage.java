@@ -46,11 +46,11 @@ public class ServerMessage {
     }
 
     public void setMessage(String message) {
-        this.message = message);
+        this.message = message;
     }
 
     public void setError(String error) {
-        this.error = error);
+        this.error = error;
     }
 
     public void setGame(GameData gameData) {
