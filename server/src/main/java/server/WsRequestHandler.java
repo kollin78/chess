@@ -136,6 +136,12 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             errorMessage.setErrorMessage("Error: wait your turn, bud");
             ctx.send(new Gson().toJson(errorMessage));
             return;
+        } else if ((!isWhite) && (!isBlack)) {
+            //spectator
+            ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+            errorMessage.setErrorMessage("Error: you're supposed to just be watching, not making moves... chill bro");
+            ctx.send(new Gson().toJson(errorMessage));
+            return;
         }
 
         try {
@@ -164,20 +170,24 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
                 ServerMessage gameOverNotification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 if(chessGame.isInCheckmate(ChessGame.TeamColor.WHITE)) {
                     gameOverNotification.setMessage("Black Wins!");
+                    connectionManager.broadcast(gameData.gameID(), null, gameOverNotification);
                 } else if(chessGame.isInCheckmate(ChessGame.TeamColor.BLACK)) {
                     gameOverNotification.setMessage("White Wins!");
+                    connectionManager.broadcast(gameData.gameID(), null, gameOverNotification);
                 } else if(chessGame.isInStalemate(ChessGame.TeamColor.WHITE) || chessGame.isInStalemate(ChessGame.TeamColor.BLACK)) {
                     gameOverNotification.setMessage("Nobody wins, very sad :(");
+                    connectionManager.broadcast(gameData.gameID(), null, gameOverNotification);
                 }
-                connectionManager.broadcast(gameData.gameID(), null, gameOverNotification);
+
             } else {
                 ServerMessage inCheckNotification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 if(chessGame.isInCheck(ChessGame.TeamColor.WHITE)) {
                     inCheckNotification.setMessage("White is in check.");
+                    connectionManager.broadcast(gameData.gameID(), null, inCheckNotification);
                 } else if(chessGame.isInCheck(ChessGame.TeamColor.BLACK)) {
                     inCheckNotification.setMessage("Black is in check.");
+                    connectionManager.broadcast(gameData.gameID(), null, inCheckNotification);
                 }
-                connectionManager.broadcast(gameData.gameID(), null, inCheckNotification);
             }
         } catch(Exception e) {
             ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);

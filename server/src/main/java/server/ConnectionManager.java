@@ -40,7 +40,7 @@ public class ConnectionManager {
 
         for(Session session : activeSessions) {
             if(session.isOpen()) {
-                if(!session.equals(moversSession)) {
+                if((moversSession == null) || (!session.getRemoteAddress().equals(moversSession.getRemoteAddress()))) {
                     session.getRemote().sendString(jsonMsg);
                 }
             }
