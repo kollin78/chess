@@ -53,7 +53,11 @@ public class DrawBoard {
         stringBuilder.append(TRIPLE_SPACE).append(PUNC_SPACE).append(PUNC_SPACE).append(RESET_TEXT_COLOR).append(RESET_BG_COLOR).append("\n");
     }
 
-    private static void drawRows(StringBuilder stringBuilder, int row, ChessBoard board, boolean isPlayerWhite, Collection<ChessMove> validMoves, ChessPosition startPosition) {
+    private static void drawRows(StringBuilder stringBuilder,
+                                 int row, ChessBoard board,
+                                 boolean isPlayerWhite,
+                                 Collection<ChessMove> validMoves,
+                                 ChessPosition startPosition) {
         stringBuilder.append(SET_BG_COLOR_DARK_GREY).append(SET_TEXT_COLOR_MAGENTA).append(SINGLE_SPACE).append(row).append(EM_SPACE);
 
         for(int column = 1; column <= 8; column++) {

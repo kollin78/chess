@@ -334,7 +334,7 @@ public class ChessClient {
                 printPrompt();
             } case NOTIFICATION -> {
                 System.out.println("\n" + DrawBoard.draw(currentGame.getBoard(), isPlayerWhite, null, null));
-                System.out.println(SET_TEXT_COLOR_MAGENTA + "\n\n" + serverMessage.getMessage());
+                System.out.println(SET_TEXT_COLOR_MAGENTA + "\n" + serverMessage.getMessage());
                 printPrompt();
             } case ERROR -> {
                 System.out.println(SET_TEXT_COLOR_RED + "\n\n" + serverMessage.getErrorMessage());

@@ -140,7 +140,10 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             isBlack = true;
         }
 
-        if((isWhite && (chessGame.getTeamTurn() != ChessGame.TeamColor.WHITE)) || (isBlack && (chessGame.getTeamTurn() != ChessGame.TeamColor.BLACK))) {
+        if((isWhite && (chessGame.getTeamTurn()
+                != ChessGame.TeamColor.WHITE))
+                || (isBlack && (chessGame.getTeamTurn()
+                != ChessGame.TeamColor.BLACK))) {
             ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
             errorMessage.setErrorMessage("Error: wait your turn, bud");
             ctx.send(new Gson().toJson(errorMessage));
@@ -239,7 +242,10 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             gameDAO.updateGame(updatedGame);
 
             ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-            notification.setMessage(username + " has left us with a hole in our heart and an unfilled space in our board or spectator area :,) \n You will be missed.");
+            notification.setMessage(username +
+                    " has left us with a hole in our heart " +
+                    "and an unfilled space in our board or spectator area :,) " +
+                    "\n You will be missed.");
             connectionManager.broadcast(gameID, ctx.session, notification);
         } catch (DataAccessException e) {
             //intellij says I need this
