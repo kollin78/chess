@@ -35,6 +35,14 @@ public class Server {
 
             this.userService = new UserService(userDAO, authDAO);
             this.gameService = new GameService(gameDAO, authDAO);
+
+            WsRequestHandler wsRequestHandler = new WsRequestHandler(authDAO, gameDAO);
+
+            javalin.ws("/ws", ws -> {
+               ws.onConnect(wsRequestHandler::handleConnect);
+               ws.onMessage(wsRequestHandler::handleMessage);
+               ws.onClose(wsRequestHandler::handleClose);
+            });
         } catch (DataAccessException e) {
             throw new RuntimeException("Error: " + e.getMessage());
         }
