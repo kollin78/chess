@@ -47,7 +47,7 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
 
             switch(userGameCommand.getCommandType()) {
                 case CONNECT -> doConnect(userGameCommand, ctx);
-                case MAKE_MOVE -> makeMove();
+                case MAKE_MOVE -> makeMove(jsonMsg, ctx);
                 case LEAVE -> leave();
                 case RESIGN -> resign();
                 default -> System.out.println("Please enter a valid command");
