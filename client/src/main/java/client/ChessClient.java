@@ -5,6 +5,7 @@ import java.util.*;
 
 import chess.ChessGame;
 import chess.ChessMove;
+import chess.ChessPiece;
 import chess.ChessPosition;
 import com.google.gson.Gson;
 import model.*;
@@ -26,6 +27,7 @@ public class ChessClient {
     private boolean isPlayerWhite = false;
     private WebSocketFacade webSocketFacade = null;
     private int currentGameID = -1;
+    private boolean isObserver = false;
 
     public ChessClient(String serverUrl) {
         serverFacade = new ServerFacade(serverUrl);
@@ -101,13 +103,21 @@ public class ChessClient {
                 help
                 """;
         } else if(state == PLAYINGGAME) {
+            if(isObserver) {
+                return """
+                    redraw - redraw board from server
+                    leave - exit current game
+                    highlight <POSITION> highlights valid moves for a piece at given <POSITION>
+                    help - prints help menu
+                    """;
+            }
             return """
                 redraw - redraw board from server
                 leave - exit current game
                 move <FROM> <TO> - makes move from <FROM> position to <TO> position
                 resign - quit like a lil baby
                 highlight <POSITION> - highlights valid moves for piece at <POSITION>
-                help
+                help - prints help menu
                 """;
         }
         return """
@@ -238,6 +248,8 @@ public class ChessClient {
                 webSocketFacade = new WebSocketFacade(serverUrl, this);
                 webSocketFacade.connect(authData.authToken(), currentGameID);
 
+                isObserver = true;
+
                 return "Spectating game";
             } catch (IndexOutOfBoundsException e) {
                 throw new ResponseException(400, "Game number doesn't exist, please pick a valid game number from listGames");
@@ -256,7 +268,7 @@ public class ChessClient {
         ChessPosition chessPosition = getPositionFromInput(params[0]);
         Collection<ChessMove> validMoves = currentGame.validMoves(chessPosition);
         if((validMoves == null) || validMoves.isEmpty()) {
-            return "No legal moves for selected piece... good luck brother";
+            return "No legal moves for selected piece or invalid piece selected";
         }
 
         return DrawBoard.draw(currentGame.getBoard(), isPlayerWhite, validMoves, chessPosition);
@@ -269,7 +281,13 @@ public class ChessClient {
 
         ChessPosition fromPosition = getPositionFromInput(params[0]);
         ChessPosition toPosition = getPositionFromInput(params[1]);
-        ChessMove newMove = new ChessMove(fromPosition, toPosition, null);
+
+        ChessPiece.PieceType promotionPiece = null;
+        if(params.length == 3) {
+            promotionPiece = getPromotionPieceFromInput(params[2]);
+        }
+
+        ChessMove newMove = new ChessMove(fromPosition, toPosition, promotionPiece);
 
         webSocketFacade.makeMove(authData.authToken(), currentGameID, newMove);
 
@@ -291,14 +309,45 @@ public class ChessClient {
         webSocketFacade.leave(authData.authToken(), currentGameID);
         state = SIGNEDIN;
         webSocketFacade = null;
+        isObserver = false;
         return "Leaving game, pls join again soon :)";
     }
 
-    private ChessPosition getPositionFromInput(String input) {
-        int column = (input.toLowerCase().charAt(0) - 'a' + 1);
-        int row = Character.getNumericValue(input.charAt(1));
+    private ChessPosition getPositionFromInput(String input) throws ResponseException {
+        if((input == null) || (input.length() != 2)) {
+            throw new ResponseException(400, "Invalid position: "
+                    + input
+                    + ". Expected format for positions is <letter/column><number/row> like e2 or g7");
+        }
 
-        return new ChessPosition(row, column);
+        int rawColumn = input.toLowerCase().charAt(0);
+        int rawRow = input.toLowerCase().charAt(1);
+        if((rawColumn < 'a') || (rawColumn > 'h')) {
+            throw new ResponseException(400, "Invalid column in "
+                    + input
+                    + ". Please enter valid column (a-h)");
+        }
+        if((rawRow < '1') || (rawRow > '8')) {
+            throw new ResponseException(400, "Invalid row in "
+                    + input
+                    + ". Please enter valid row (1-8)");
+        }
+
+        int usefulColumn = rawColumn - 'a' + 1;
+        int usefulRow = Character.getNumericValue(rawRow);
+
+        return new ChessPosition(usefulRow, usefulColumn);
+    }
+
+    private ChessPiece.PieceType getPromotionPieceFromInput(String input) throws ResponseException {
+        return switch(input.toLowerCase()) {
+            case "queen" -> ChessPiece.PieceType.QUEEN;
+            case "rook" -> ChessPiece.PieceType.ROOK;
+            case "bishop" -> ChessPiece.PieceType.BISHOP;
+            case "knight" -> ChessPiece.PieceType.KNIGHT;
+            default -> throw new ResponseException(400, "Invalid promotion piece\n" +
+                    "Please pick queen, rook, bishop, or knight");
+        };
     }
 
     private String getErrorMessageFromJson(String jsonError) {

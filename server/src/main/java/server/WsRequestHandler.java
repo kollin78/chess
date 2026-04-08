@@ -55,7 +55,7 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             }
         } catch(Exception e) {
             ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-            errorMessage.setErrorMessage("Error: an error occurred, amigo (in handleMessage)\n " + e.getMessage());
+            errorMessage.setErrorMessage("Error: invalid input\n" + e.getMessage());
             ctx.send(new Gson().toJson(errorMessage));
         }
     }
@@ -160,6 +160,50 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             JsonObject jsonMove = new Gson().fromJson(jsonMsg, JsonObject.class);
             ChessMove normalMove = new Gson().fromJson(jsonMove.get("move"), ChessMove.class);
             ChessPiece movePiece = gameData.game().getBoard().getPiece(normalMove.getStartPosition());
+
+            if((isWhite && movePiece.getTeamColor().equals(ChessGame.TeamColor.BLACK))
+                    || (isBlack && movePiece.getTeamColor().equals(ChessGame.TeamColor.WHITE))) {
+                ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                errorMessage.setErrorMessage("Error: you cannot move another player's pieces...");
+                ctx.send(new Gson().toJson(errorMessage));
+                return;
+            }
+            if(normalMove.getEndPosition().equals(normalMove.getStartPosition())) {
+                ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                errorMessage.setErrorMessage("Error: move must actually move a piece");
+                ctx.send(new Gson().toJson(errorMessage));
+                return;
+            }
+
+            boolean isPiecePawn = movePiece.getPieceType().equals(ChessPiece.PieceType.PAWN);
+            int moveEndRow = normalMove.getEndPosition().getRow();
+            boolean isPiecePromoting = ((movePiece.getTeamColor() == ChessGame.TeamColor.WHITE) && (moveEndRow == 8))
+                    || ((movePiece.getTeamColor() == ChessGame.TeamColor.BLACK) && (moveEndRow == 1));
+
+            if(normalMove.getPromotionPiece() != null) {
+                if(!isPiecePawn) {
+                    ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                    errorMessage.setErrorMessage("Error: only pawns can promote");
+                    ctx.send(new Gson().toJson(errorMessage));
+                    return;
+                }
+                if(!isPiecePromoting) {
+                    ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                    errorMessage.setErrorMessage("Error: can only promote on back rank");
+                    ctx.send(new Gson().toJson(errorMessage));
+                    return;
+                }
+            }
+            if(isPiecePromoting
+                    && isPiecePawn
+                    && (normalMove.getPromotionPiece() == null)) {
+                ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                errorMessage.setErrorMessage("Error: must include promotion piece\n" +
+                        "move <FROM> <TO> <PROMOTION_PIECE_TYPE> like move e7 e8 queen");
+                ctx.send(new Gson().toJson(errorMessage));
+                return;
+            }
+
             chessGame.makeMove(normalMove);
 
             GameData updatedGameData = new GameData(
@@ -187,10 +231,10 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             if(chessGame.isGameFinished()) {
                 ServerMessage gameOverNotification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 if(chessGame.isInCheckmate(ChessGame.TeamColor.WHITE)) {
-                    gameOverNotification.setMessage( gameData.blackUsername() + " (Black) Wins!");
+                    gameOverNotification.setMessage("Checkmate!: " + gameData.blackUsername() + " (Black) Wins!");
                     connectionManager.broadcast(gameData.gameID(), null, gameOverNotification);
                 } else if(chessGame.isInCheckmate(ChessGame.TeamColor.BLACK)) {
-                    gameOverNotification.setMessage(gameData.whiteUsername() + " (White) Wins!");
+                    gameOverNotification.setMessage("Checkmate!: " + gameData.whiteUsername() + " (White) Wins!");
                     connectionManager.broadcast(gameData.gameID(), null, gameOverNotification);
                 } else if(chessGame.isInStalemate(ChessGame.TeamColor.WHITE) || chessGame.isInStalemate(ChessGame.TeamColor.BLACK)) {
                     gameOverNotification.setMessage("Nobody wins, very sad :(");
@@ -208,9 +252,8 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
                 }
             }
         } catch(Exception e) {
-            e.printStackTrace();
             ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-            errorMessage.setErrorMessage(String.format("Error: an error occurred, amigo (in makeMove), %s", e.getMessage()));
+            errorMessage.setErrorMessage("Error: invalid input. Make sure you enter a valid command \n(see 'help' for a list of valid commands and parameters)");
             ctx.send(new Gson().toJson(errorMessage));
         }
 
