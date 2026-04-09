@@ -253,7 +253,8 @@ public class WsRequestHandler implements WsConnectHandler, WsMessageHandler, WsC
             }
         } catch(Exception e) {
             ServerMessage errorMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-            errorMessage.setErrorMessage("Error: invalid input. Make sure you enter a valid command \n(see 'help' for a list of valid commands and parameters)");
+            errorMessage.setErrorMessage("Error: invalid input. Make sure you enter a valid command \n" +
+                    "(see 'help' for a list of valid commands and parameters)");
             ctx.send(new Gson().toJson(errorMessage));
         }
 
