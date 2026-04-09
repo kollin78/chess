@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConnectionManager {
-
+    // quick comment for github, thanks
     public ConcurrentHashMap<Integer, HashSet<Session>> games = new ConcurrentHashMap<>();
     public ConcurrentHashMap<Session, String> users = new ConcurrentHashMap<>();
 
